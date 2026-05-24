@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedStickersRouteImport } from './routes/_authenticated/stickers'
+import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAlbumsRouteImport } from './routes/_authenticated/albums'
 
@@ -29,6 +31,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedStickersRoute = AuthenticatedStickersRouteImport.update({
+  id: '/stickers',
+  path: '/stickers',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -45,12 +57,16 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/albums': typeof AuthenticatedAlbumsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/scan': typeof AuthenticatedScanRoute
+  '/stickers': typeof AuthenticatedStickersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/albums': typeof AuthenticatedAlbumsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/scan': typeof AuthenticatedScanRoute
+  '/stickers': typeof AuthenticatedStickersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,12 +75,14 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_authenticated/albums': typeof AuthenticatedAlbumsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/scan': typeof AuthenticatedScanRoute
+  '/_authenticated/stickers': typeof AuthenticatedStickersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/albums' | '/dashboard'
+  fullPaths: '/' | '/login' | '/albums' | '/dashboard' | '/scan' | '/stickers'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/albums' | '/dashboard'
+  to: '/' | '/login' | '/albums' | '/dashboard' | '/scan' | '/stickers'
   id:
     | '__root__'
     | '/'
@@ -72,6 +90,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/_authenticated/albums'
     | '/_authenticated/dashboard'
+    | '/_authenticated/scan'
+    | '/_authenticated/stickers'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -103,6 +123,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/stickers': {
+      id: '/_authenticated/stickers'
+      path: '/stickers'
+      fullPath: '/stickers'
+      preLoaderRoute: typeof AuthenticatedStickersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/scan': {
+      id: '/_authenticated/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof AuthenticatedScanRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -123,11 +157,15 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedAlbumsRoute: typeof AuthenticatedAlbumsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedScanRoute: typeof AuthenticatedScanRoute
+  AuthenticatedStickersRoute: typeof AuthenticatedStickersRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAlbumsRoute: AuthenticatedAlbumsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedScanRoute: AuthenticatedScanRoute,
+  AuthenticatedStickersRoute: AuthenticatedStickersRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
