@@ -14,7 +14,166 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      albums: {
+        Row: {
+          category: Database["public"]["Enums"]["album_category"]
+          created_at: string
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["album_status"]
+          updated_at: string
+          user_id: string
+          year: number | null
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["album_category"]
+          created_at?: string
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["album_status"]
+          updated_at?: string
+          user_id: string
+          year?: number | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["album_category"]
+          created_at?: string
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["album_status"]
+          updated_at?: string
+          user_id?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      sales: {
+        Row: {
+          buyer_name: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          quantity: number
+          sale_price: number
+          sticker_id: string | null
+          user_id: string
+        }
+        Insert: {
+          buyer_name?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          quantity: number
+          sale_price: number
+          sticker_id?: string | null
+          user_id: string
+        }
+        Update: {
+          buyer_name?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          quantity?: number
+          sale_price?: number
+          sticker_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_sticker_id_fkey"
+            columns: ["sticker_id"]
+            isOneToOne: false
+            referencedRelation: "stickers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stickers: {
+        Row: {
+          album_id: string | null
+          code: string | null
+          condition: Database["public"]["Enums"]["sticker_condition"]
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          notes: string | null
+          price: number
+          quantity: number
+          rarity: string | null
+          status: Database["public"]["Enums"]["sticker_status"]
+          team: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          album_id?: string | null
+          code?: string | null
+          condition?: Database["public"]["Enums"]["sticker_condition"]
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          notes?: string | null
+          price?: number
+          quantity?: number
+          rarity?: string | null
+          status?: Database["public"]["Enums"]["sticker_status"]
+          team?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          album_id?: string | null
+          code?: string | null
+          condition?: Database["public"]["Enums"]["sticker_condition"]
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          notes?: string | null
+          price?: number
+          quantity?: number
+          rarity?: string | null
+          status?: Database["public"]["Enums"]["sticker_status"]
+          team?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stickers_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +182,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      album_category: "copa" | "pokemon" | "tcg" | "futebol" | "outro"
+      album_status: "ativo" | "inativo"
+      sticker_condition: "nova" | "usada" | "danificada"
+      sticker_status: "disponivel" | "vendida" | "reservada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +312,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      album_category: ["copa", "pokemon", "tcg", "futebol", "outro"],
+      album_status: ["ativo", "inativo"],
+      sticker_condition: ["nova", "usada", "danificada"],
+      sticker_status: ["disponivel", "vendida", "reservada"],
+    },
   },
 } as const
