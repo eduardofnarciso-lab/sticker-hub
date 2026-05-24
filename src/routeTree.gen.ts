@@ -12,8 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PublicCatalogUserIdRouteImport } from './routes/public-catalog.$userId'
+import { Route as AuthenticatedStockRouteImport } from './routes/_authenticated/stock'
 import { Route as AuthenticatedStickersRouteImport } from './routes/_authenticated/stickers'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
+import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAlbumsRouteImport } from './routes/_authenticated/albums'
 
@@ -31,6 +34,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicCatalogUserIdRoute = PublicCatalogUserIdRouteImport.update({
+  id: '/public-catalog/$userId',
+  path: '/public-catalog/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedStockRoute = AuthenticatedStockRouteImport.update({
+  id: '/stock',
+  path: '/stock',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedStickersRoute = AuthenticatedStickersRouteImport.update({
   id: '/stickers',
   path: '/stickers',
@@ -39,6 +52,11 @@ const AuthenticatedStickersRoute = AuthenticatedStickersRouteImport.update({
 const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
   id: '/scan',
   path: '/scan',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSalesRoute = AuthenticatedSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -57,16 +75,22 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/albums': typeof AuthenticatedAlbumsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/sales': typeof AuthenticatedSalesRoute
   '/scan': typeof AuthenticatedScanRoute
   '/stickers': typeof AuthenticatedStickersRoute
+  '/stock': typeof AuthenticatedStockRoute
+  '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/albums': typeof AuthenticatedAlbumsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/sales': typeof AuthenticatedSalesRoute
   '/scan': typeof AuthenticatedScanRoute
   '/stickers': typeof AuthenticatedStickersRoute
+  '/stock': typeof AuthenticatedStockRoute
+  '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -75,14 +99,35 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_authenticated/albums': typeof AuthenticatedAlbumsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
   '/_authenticated/stickers': typeof AuthenticatedStickersRoute
+  '/_authenticated/stock': typeof AuthenticatedStockRoute
+  '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/albums' | '/dashboard' | '/scan' | '/stickers'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/albums'
+    | '/dashboard'
+    | '/sales'
+    | '/scan'
+    | '/stickers'
+    | '/stock'
+    | '/public-catalog/$userId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/albums' | '/dashboard' | '/scan' | '/stickers'
+  to:
+    | '/'
+    | '/login'
+    | '/albums'
+    | '/dashboard'
+    | '/sales'
+    | '/scan'
+    | '/stickers'
+    | '/stock'
+    | '/public-catalog/$userId'
   id:
     | '__root__'
     | '/'
@@ -90,14 +135,18 @@ export interface FileRouteTypes {
     | '/login'
     | '/_authenticated/albums'
     | '/_authenticated/dashboard'
+    | '/_authenticated/sales'
     | '/_authenticated/scan'
     | '/_authenticated/stickers'
+    | '/_authenticated/stock'
+    | '/public-catalog/$userId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  PublicCatalogUserIdRoute: typeof PublicCatalogUserIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -123,6 +172,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/public-catalog/$userId': {
+      id: '/public-catalog/$userId'
+      path: '/public-catalog/$userId'
+      fullPath: '/public-catalog/$userId'
+      preLoaderRoute: typeof PublicCatalogUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/stock': {
+      id: '/_authenticated/stock'
+      path: '/stock'
+      fullPath: '/stock'
+      preLoaderRoute: typeof AuthenticatedStockRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/stickers': {
       id: '/_authenticated/stickers'
       path: '/stickers'
@@ -135,6 +198,13 @@ declare module '@tanstack/react-router' {
       path: '/scan'
       fullPath: '/scan'
       preLoaderRoute: typeof AuthenticatedScanRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/sales': {
+      id: '/_authenticated/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof AuthenticatedSalesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard': {
@@ -157,15 +227,19 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedAlbumsRoute: typeof AuthenticatedAlbumsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
   AuthenticatedStickersRoute: typeof AuthenticatedStickersRoute
+  AuthenticatedStockRoute: typeof AuthenticatedStockRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAlbumsRoute: AuthenticatedAlbumsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedSalesRoute: AuthenticatedSalesRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,
   AuthenticatedStickersRoute: AuthenticatedStickersRoute,
+  AuthenticatedStockRoute: AuthenticatedStockRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -176,6 +250,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
+  PublicCatalogUserIdRoute: PublicCatalogUserIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
