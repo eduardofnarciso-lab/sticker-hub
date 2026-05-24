@@ -163,6 +163,3 @@ function QuickAction({
     </Link>
   );
 }
-
-// Local icon import workaround
-import { Receipt } from "lucide-react";
