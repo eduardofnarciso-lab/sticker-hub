@@ -10,6 +10,7 @@ import {
   Camera,
   Share2,
   ExternalLink,
+  Receipt,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
