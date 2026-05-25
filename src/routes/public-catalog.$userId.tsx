@@ -668,7 +668,7 @@ function PublicCatalog() {
                 {cartValue > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">
-                      {cartTotal} figurinha{cartTotal !== 1 ? "s"}
+                      {cartTotal} figurinha{cartTotal !== 1 ? "s" : ""}
                     </span>
                     <span className="text-lg font-black text-green-700">{brl(cartValue)}</span>
                   </div>
