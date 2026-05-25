@@ -7,10 +7,9 @@ import {
   Scripts,
   Link,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
+// useRouter ainda é usado em ErrorComponent
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
 
 import appCss from "../styles.css?url";
 
@@ -93,19 +92,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const router = useRouter();
-
-  useEffect(() => {
-    // Ignora INITIAL_SESSION — ele dispara automaticamente no carregamento
-    // e causaria um loop: invalidate → re-render → invalidate → ...
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
-        router.invalidate();
-        queryClient.invalidateQueries();
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
