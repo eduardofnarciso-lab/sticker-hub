@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { Sticker } from "lucide-react";
+import { Sticker, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,10 +14,8 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -30,25 +28,12 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: { display_name: displayName || email.split("@")[0] },
-          },
-        });
-        if (error) throw error;
-        toast.success("Conta criada! Verifique seu e-mail para confirmar.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success("Bem-vindo de volta!");
-        navigate({ to: "/dashboard" });
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success("Bem-vindo!");
+      navigate({ to: "/dashboard" });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao autenticar";
+      const msg = err instanceof Error ? err.message : "E-mail ou senha incorretos.";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -57,55 +42,24 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 bg-gradient-to-br from-background via-background to-accent/40">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div
-            className="h-14 w-14 rounded-2xl flex items-center justify-center text-primary-foreground shadow-elevated mb-3"
+            className="h-14 w-14 rounded-2xl flex items-center justify-center text-primary-foreground shadow-lg mb-3"
             style={{ background: "var(--gradient-primary)" }}
           >
             <Sticker className="h-7 w-7" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Catálogo de Figurinhas</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Figurinhas Copa 2026</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Catalogue, controle e venda suas figurinhas.
+            Entre com sua conta para continuar.
           </p>
         </div>
 
-        <Card className="p-6 shadow-elevated">
-          <div className="flex rounded-lg bg-muted p-1 mb-5">
-            <button
-              type="button"
-              onClick={() => setMode("signin")}
-              className={`flex-1 text-sm font-medium py-2 rounded-md transition-colors ${
-                mode === "signin" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-              }`}
-            >
-              Entrar
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("signup")}
-              className={`flex-1 text-sm font-medium py-2 rounded-md transition-colors ${
-                mode === "signup" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-              }`}
-            >
-              Criar conta
-            </button>
-          </div>
-
+        {/* Card de login */}
+        <Card className="p-6 shadow-lg">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === "signup" && (
-              <div className="space-y-1.5">
-                <Label htmlFor="name">Nome</Label>
-                <Input
-                  id="name"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Seu nome"
-                  required
-                />
-              </div>
-            )}
             <div className="space-y-1.5">
               <Label htmlFor="email">E-mail</Label>
               <Input
@@ -116,6 +70,7 @@ function LoginPage() {
                 placeholder="voce@email.com"
                 required
                 autoComplete="email"
+                autoFocus
               />
             </div>
             <div className="space-y-1.5">
@@ -128,17 +83,18 @@ function LoginPage() {
                 placeholder="••••••••"
                 required
                 minLength={6}
-                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                autoComplete="current-password"
               />
             </div>
-            <Button type="submit" className="w-full h-11 text-base" disabled={loading}>
-              {loading ? "Carregando..." : mode === "signin" ? "Entrar" : "Criar conta"}
+            <Button type="submit" className="w-full h-11 text-base mt-2" disabled={loading}>
+              {loading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          <Link to="/" className="hover:underline">Voltar ao início</Link>
+        <p className="text-center text-xs text-muted-foreground mt-6 flex items-center justify-center gap-1">
+          <Lock className="h-3 w-3" />
+          Acesso restrito. Fale com o administrador para obter uma conta.
         </p>
       </div>
     </div>

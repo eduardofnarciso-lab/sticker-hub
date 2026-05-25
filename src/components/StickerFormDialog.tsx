@@ -95,8 +95,7 @@ export function StickerFormDialog({
     setUploading(true);
     try {
       const { data: userRes } = await supabase.auth.getUser();
-      const uid = userRes.user?.id;
-      if (!uid) throw new Error("Não autenticado");
+      const uid = userRes.user?.id ?? "shared";
       const ext = file.name.split(".").pop();
       const path = `${uid}/${crypto.randomUUID()}.${ext}`;
       const { error } = await supabase.storage.from("sticker-images").upload(path, file);
@@ -114,10 +113,9 @@ export function StickerFormDialog({
   const save = useMutation({
     mutationFn: async () => {
       const { data: userRes } = await supabase.auth.getUser();
-      const user_id = userRes.user?.id;
-      if (!user_id) throw new Error("Não autenticado");
+      const user_id = userRes.user?.id ?? null;
       const payload = {
-        user_id,
+        ...(user_id ? { user_id } : {}),
         name: form.name.trim(),
         album_id: form.album_id || null,
         code: form.code || null,

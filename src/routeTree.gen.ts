@@ -18,7 +18,9 @@ import { Route as AuthenticatedStickersRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedContagemRouteImport } from './routes/_authenticated/contagem'
 import { Route as AuthenticatedAlbumsRouteImport } from './routes/_authenticated/albums'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -64,16 +66,28 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedContagemRoute = AuthenticatedContagemRouteImport.update({
+  id: '/contagem',
+  path: '/contagem',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAlbumsRoute = AuthenticatedAlbumsRouteImport.update({
   id: '/albums',
   path: '/albums',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/albums': typeof AuthenticatedAlbumsRoute
+  '/contagem': typeof AuthenticatedContagemRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/sales': typeof AuthenticatedSalesRoute
   '/scan': typeof AuthenticatedScanRoute
@@ -84,7 +98,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/albums': typeof AuthenticatedAlbumsRoute
+  '/contagem': typeof AuthenticatedContagemRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/sales': typeof AuthenticatedSalesRoute
   '/scan': typeof AuthenticatedScanRoute
@@ -97,7 +113,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/albums': typeof AuthenticatedAlbumsRoute
+  '/_authenticated/contagem': typeof AuthenticatedContagemRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
@@ -110,7 +128,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/admin'
     | '/albums'
+    | '/contagem'
     | '/dashboard'
     | '/sales'
     | '/scan'
@@ -121,7 +141,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/admin'
     | '/albums'
+    | '/contagem'
     | '/dashboard'
     | '/sales'
     | '/scan'
@@ -133,7 +155,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/login'
+    | '/_authenticated/admin'
     | '/_authenticated/albums'
+    | '/_authenticated/contagem'
     | '/_authenticated/dashboard'
     | '/_authenticated/sales'
     | '/_authenticated/scan'
@@ -214,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/contagem': {
+      id: '/_authenticated/contagem'
+      path: '/contagem'
+      fullPath: '/contagem'
+      preLoaderRoute: typeof AuthenticatedContagemRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/albums': {
       id: '/_authenticated/albums'
       path: '/albums'
@@ -221,11 +252,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAlbumsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAlbumsRoute: typeof AuthenticatedAlbumsRoute
+  AuthenticatedContagemRoute: typeof AuthenticatedContagemRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
@@ -234,7 +274,9 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAlbumsRoute: AuthenticatedAlbumsRoute,
+  AuthenticatedContagemRoute: AuthenticatedContagemRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSalesRoute: AuthenticatedSalesRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,
@@ -255,3 +297,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
