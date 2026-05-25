@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { brl, fmtCode, fmtName } from "@/lib/format";
+import { brl, fmtCode, fmtName, stickerPrice } from "@/lib/format";
 import { flagUrl } from "@/lib/copa2026Data";
 import { toast } from "sonner";
 
@@ -272,7 +272,7 @@ function PublicCatalog() {
           code:   s.code ?? "",
           name:   s.name,
           team:   s.team ?? "",
-          price:  Number(s.price ?? 0),
+          price:  stickerPrice(s.code),
           qty:    1,
           maxQty: avail,
         },
@@ -301,6 +301,8 @@ function PublicCatalog() {
   };
 
   // ── Envio do pedido ─────────────────────────────────────────────────────────
+  // Usa RPC place_order (SECURITY DEFINER) para criar pedido + dar baixa no estoque
+  // atomicamente — cliente anon não tem permissão de UPDATE direto na tabela stickers.
   const sendOrder = async () => {
     if (!buyerName.trim())  { toast.error("Digite seu nome"); return; }
     if (!buyerPhone.trim()) { toast.error("Digite seu WhatsApp"); return; }
@@ -308,32 +310,22 @@ function PublicCatalog() {
 
     setSending(true);
     try {
-      const { data: order, error: orderErr } = await supabase
-        .from("orders")
-        .insert({
-          seller_id:      userId,
-          buyer_name:     buyerName.trim(),
-          buyer_whatsapp: buyerPhone.trim().replace(/\D/g, ""),
-          status:         "pendente",
-          total_value:    cartValue,
-        })
-        .select("id")
-        .single();
-      if (orderErr) throw orderErr;
-
-      const { error: itemsErr } = await supabase.from("order_items").insert(
-        cart.map((c) => ({
-          order_id:     order.id,
+      const { data: orderId, error } = await (supabase as any).rpc("place_order", {
+        p_seller_id:      userId,
+        p_buyer_name:     buyerName.trim(),
+        p_buyer_whatsapp: buyerPhone.trim().replace(/\D/g, ""),
+        p_total_value:    cartValue,
+        p_items: cart.map((c) => ({
           sticker_id:   c.id,
           sticker_code: c.code,
           sticker_name: c.name,
           quantity:     c.qty,
           unit_price:   c.price,
-        }))
-      );
-      if (itemsErr) throw itemsErr;
+        })),
+      });
+      if (error) throw error;
 
-      // Reservas temporárias → agora são pedido; libera do cart_reservations
+      // Libera reservas temporárias (pedido já registrado no banco)
       await dbReleaseAll(sessionId);
       qc.invalidateQueries({ queryKey: ["cart-reservations"] });
       qc.invalidateQueries({ queryKey: ["public-stickers", userId] });
@@ -341,8 +333,7 @@ function PublicCatalog() {
       // Monta mensagem WhatsApp
       const sellerPhone = (seller?.whatsapp ?? SELLER_PHONE).replace(/\D/g, "");
       const linhas = cart.map(
-        (c) =>
-          `• ${fmtCode(c.code)} — ${fmtName(c.name)} × ${c.qty} = ${brl(c.qty * c.price)}`
+        (c) => `• ${fmtCode(c.code)} — ${fmtName(c.name)} × ${c.qty} = ${brl(c.qty * c.price)}`
       );
       const msg = [
         `🏷️ *Pedido de Figurinhas Copa 2026*`,
@@ -355,7 +346,7 @@ function PublicCatalog() {
         ``,
         `💰 *Total: ${brl(cartValue)}*`,
         ``,
-        `🆔 Pedido: #${order.id.slice(0, 8).toUpperCase()}`,
+        `🆔 Pedido: #${String(orderId).slice(0, 8).toUpperCase()}`,
       ].join("\n");
 
       const waUrl = `https://wa.me/55${sellerPhone}?text=${encodeURIComponent(msg)}`;
@@ -494,7 +485,7 @@ function PublicCatalog() {
                     {items.map((s) => {
                       const inCart = cart.find((c) => c.id === s.id);
                       const avail  = availableQty(s);
-                      const price  = Number(s.price ?? 0);
+                      const price  = stickerPrice(s.code);
                       const esgotado = avail <= 0 && !inCart;
 
                       return (
@@ -605,8 +596,7 @@ function PublicCatalog() {
               <div className="mx-4 mt-3 mb-1 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-500" />
                 <span>
-                  Suas figurinhas ficam reservadas por <strong>15 minutos</strong> de inatividade.
-                  Confirme o pedido pelo WhatsApp para garantir.
+                  Reservadas por <strong>15 min</strong>. Sem atividade, voltam automaticamente ao estoque — conclua o pedido para garantir.
                 </span>
               </div>
             )}

@@ -1,3 +1,11 @@
+// Preço dinâmico pelo código: logo (XX1) e FWC = R$2, demais = R$1
+export function stickerPrice(code: string | null | undefined): number {
+  if (!code) return 1;
+  if (code === "00" || code.startsWith("FWC")) return 2;
+  if (/^[A-Z]{2,3}1$/.test(code)) return 2;
+  return 1;
+}
+
 // Formata código: "ALG1" → "ALG 1", "ALG10" → "ALG 10"
 export const fmtCode = (code: string | null | undefined): string => {
   if (!code) return "";
