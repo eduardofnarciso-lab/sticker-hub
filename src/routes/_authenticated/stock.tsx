@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { fmtCode, fmtName } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/stock")({
   component: StockPage,
@@ -263,13 +264,13 @@ function StockPage() {
                       ? "bg-green-100 text-green-700"
                       : "bg-muted text-muted-foreground"
                   }`}>
-                    {s.code ?? "—"}
+                    {fmtCode(s.code) || "—"}
                   </div>
 
                   {/* Info */}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-medium text-sm truncate">{s.name}</span>
+                      <span className="font-medium text-sm truncate">{fmtName(s.name)}</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                       <span className="text-xs text-muted-foreground">{s.team ?? ""}</span>

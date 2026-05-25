@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { getAllSections, flagUrl, type StickerTemplate, type TeamSection } from "@/lib/copa2026Data";
+import { fmtCode, fmtName } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/contagem")({
   component: ContagemPage,
@@ -250,12 +251,12 @@ function ContagemPage() {
                           : <span className="text-xs">🏆</span>
                         }
                         <span className={`font-mono text-xs font-bold ${q > 0 ? "text-green-700" : "text-muted-foreground"}`}>
-                          {tpl.code}
+                          {fmtCode(tpl.code)}
                         </span>
                       </div>
 
                       <span className="text-[10px] text-center text-muted-foreground leading-tight line-clamp-2 min-h-[2rem]">
-                        {tpl.name}
+                        {fmtName(tpl.name)}
                       </span>
 
                       <div className="flex items-center gap-1 w-full mt-1">

@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
-import { Sticker, Search, ShoppingCart, Plus, Minus, X, Send } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { Sticker, Search, ShoppingCart, Plus, Minus, X, Send, Clock, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { brl } from "@/lib/format";
-import { flagUrl, TEAM_ISO } from "@/lib/copa2026Data";
+import { brl, fmtCode, fmtName } from "@/lib/format";
+import { flagUrl } from "@/lib/copa2026Data";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/public-catalog/$userId")({
@@ -20,17 +20,32 @@ export const Route = createFileRoute("/public-catalog/$userId")({
   }),
 });
 
+// ─── Constantes ────────────────────────────────────────────────────────────────
+const SELLER_PHONE   = "5515991460543"; // WhatsApp do vendedor (fallback)
+const INACTIVITY_MS  = 15 * 60 * 1000; // 15 min sem interação → modal
+const CONFIRM_MS     =  2 * 60 * 1000; //  2 min para confirmar → libera reservas
+
+// ─── Tipos ─────────────────────────────────────────────────────────────────────
 type CartItem = {
-  id: string;
-  code: string;
-  name: string;
-  team: string;
-  price: number;
-  qty: number;
+  id:     string;
+  code:   string;
+  name:   string;
+  team:   string;
+  price:  number;
+  qty:    number;
   maxQty: number;
 };
 
-// Extrai código do time a partir do código da figurinha (ex: "BRA1" → "BRA")
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+function getSessionId(): string {
+  let id = sessionStorage.getItem("catalog_session_id");
+  if (!id) {
+    id = crypto.randomUUID();
+    sessionStorage.setItem("catalog_session_id", id);
+  }
+  return id;
+}
+
 function teamCodeFromSticker(code: string | null): string {
   if (!code) return "";
   if (code === "00" || code.startsWith("FWC")) return "INTRO";
@@ -38,16 +53,61 @@ function teamCodeFromSticker(code: string | null): string {
   return m ? m[1] : "";
 }
 
+// Usa `as any` para tabela dinâmica não tipada no schema gerado
+const db = supabase as any;
+
+async function dbReserve(sessionId: string, stickerId: string, qty: number) {
+  const expires = new Date(Date.now() + INACTIVITY_MS + CONFIRM_MS + 60_000).toISOString();
+  await db.from("cart_reservations").upsert(
+    { session_id: sessionId, sticker_id: stickerId, quantity: qty, expires_at: expires },
+    { onConflict: "session_id,sticker_id" }
+  );
+}
+
+async function dbRelease(sessionId: string, stickerId: string) {
+  await db.from("cart_reservations")
+    .delete()
+    .eq("session_id", sessionId)
+    .eq("sticker_id", stickerId);
+}
+
+async function dbReleaseAll(sessionId: string) {
+  await db.from("cart_reservations").delete().eq("session_id", sessionId);
+}
+
+async function fetchReservedMap(): Promise<Map<string, number>> {
+  const now = new Date().toISOString();
+  const { data } = await db.from("cart_reservations")
+    .select("sticker_id, quantity")
+    .gt("expires_at", now);
+  const map = new Map<string, number>();
+  for (const r of data ?? []) {
+    map.set(r.sticker_id, (map.get(r.sticker_id) ?? 0) + r.quantity);
+  }
+  return map;
+}
+
+// ─── Componente ────────────────────────────────────────────────────────────────
 function PublicCatalog() {
   const { userId } = Route.useParams();
-  const [search, setSearch]       = useState("");
-  const [cart, setCart]           = useState<CartItem[]>([]);
-  const [cartOpen, setCartOpen]   = useState(false);
-  const [buyerName, setBuyerName] = useState("");
-  const [buyerPhone, setBuyerPhone] = useState("");
-  const [sending, setSending]     = useState(false);
+  const qc         = useQueryClient();
+  const sessionId  = useRef(getSessionId()).current;
 
-  // Busca perfil do vendedor (nome + WhatsApp)
+  const [search,    setSearch]    = useState("");
+  const [cart,      setCart]      = useState<CartItem[]>([]);
+  const [cartOpen,  setCartOpen]  = useState(false);
+  const [buyerName, setBuyerName] = useState("");
+  const [buyerPhone,setBuyerPhone]= useState("");
+  const [sending,   setSending]   = useState(false);
+
+  // Modal de inatividade
+  const [inactiveModal, setInactiveModal]   = useState(false);
+  const [confirmSecs,   setConfirmSecs]     = useState(0);
+  const inactivityTimer  = useRef<ReturnType<typeof setTimeout>>();
+  const abandonTimer     = useRef<ReturnType<typeof setTimeout>>();
+  const countdownTimer   = useRef<ReturnType<typeof setInterval>>();
+
+  // ── Perfil do vendedor ──────────────────────────────────────────────────────
   const { data: seller } = useQuery({
     queryKey: ["seller-profile", userId],
     queryFn: async () => {
@@ -60,9 +120,10 @@ function PublicCatalog() {
     },
   });
 
-  // Busca figurinhas disponíveis do vendedor
+  // ── Figurinhas disponíveis ──────────────────────────────────────────────────
   const { data: stickers = [], isLoading } = useQuery({
     queryKey: ["public-stickers", userId],
+    refetchInterval: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stickers")
@@ -76,11 +137,101 @@ function PublicCatalog() {
     },
   });
 
-  // Agrupa por time, mantendo ordem
+  // ── Mapa de reservas ativas (todos usuários) ────────────────────────────────
+  const { data: reservedMap = new Map<string, number>() } = useQuery({
+    queryKey: ["cart-reservations"],
+    refetchInterval: 20_000,
+    queryFn: fetchReservedMap,
+  });
+
+  // ── Cleanup ao fechar/sair da página ───────────────────────────────────────
+  useEffect(() => {
+    const release = () => dbReleaseAll(sessionId);
+    window.addEventListener("beforeunload", release);
+    return () => {
+      window.removeEventListener("beforeunload", release);
+      release();
+    };
+  }, [sessionId]);
+
+  // ── Timer de inatividade ───────────────────────────────────────────────────
+  const clearAllTimers = useCallback(() => {
+    clearTimeout(inactivityTimer.current);
+    clearTimeout(abandonTimer.current);
+    clearInterval(countdownTimer.current);
+  }, []);
+
+  const triggerAbandon = useCallback(async () => {
+    clearAllTimers();
+    await dbReleaseAll(sessionId);
+    setCart([]);
+    setCartOpen(false);
+    setInactiveModal(false);
+    qc.invalidateQueries({ queryKey: ["cart-reservations"] });
+    qc.invalidateQueries({ queryKey: ["public-stickers", userId] });
+    toast.info("Reservas liberadas por inatividade. Pode escolher novamente!");
+  }, [sessionId, userId, qc, clearAllTimers]);
+
+  const startInactivityTimer = useCallback(() => {
+    clearAllTimers();
+    inactivityTimer.current = setTimeout(() => {
+      // Mostrar modal com contador de 2 minutos
+      setInactiveModal(true);
+      setConfirmSecs(120);
+      countdownTimer.current = setInterval(() => {
+        setConfirmSecs((s) => {
+          if (s <= 1) { clearInterval(countdownTimer.current); return 0; }
+          return s - 1;
+        });
+      }, 1000);
+      abandonTimer.current = setTimeout(triggerAbandon, CONFIRM_MS);
+    }, INACTIVITY_MS);
+  }, [clearAllTimers, triggerAbandon]);
+
+  const resetInactivity = useCallback(() => {
+    if (cart.length === 0) return;
+    setInactiveModal(false);
+    clearTimeout(abandonTimer.current);
+    clearInterval(countdownTimer.current);
+    startInactivityTimer();
+  }, [cart.length, startInactivityTimer]);
+
+  useEffect(() => {
+    if (cart.length === 0) { clearAllTimers(); setInactiveModal(false); return; }
+
+    startInactivityTimer();
+    const events = ["mousemove", "keydown", "click", "touchstart", "scroll"];
+    const handler = () => resetInactivity();
+    events.forEach((e) => window.addEventListener(e, handler, { passive: true }));
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, handler));
+      clearAllTimers();
+    };
+  }, [cart.length, startInactivityTimer, resetInactivity, clearAllTimers]);
+
+  // ── Quantidade disponível para este cliente ─────────────────────────────────
+  // avail = total_stock - reservado_por_outros (reservas minhas já compensadas)
+  const availableQty = useCallback(
+    (s: (typeof stickers)[number]): number => {
+      const myQty    = cart.find((c) => c.id === s.id)?.qty ?? 0;
+      const reserved = reservedMap.get(s.id) ?? 0;
+      return Math.max(0, s.quantity - reserved + myQty);
+    },
+    [cart, reservedMap]
+  );
+
+  // ── Totais ─────────────────────────────────────────────────────────────────
+  const totalUnits = useMemo(
+    () => stickers.reduce((acc, s) => acc + s.quantity, 0),
+    [stickers]
+  );
+  const cartTotal = cart.reduce((acc, i) => acc + i.qty, 0);
+  const cartValue = cart.reduce((acc, i) => acc + i.qty * i.price, 0);
+
+  // ── Grupos por time ─────────────────────────────────────────────────────────
   const groups = useMemo(() => {
     const term = search.trim().toLowerCase();
-    const map = new Map<string, { teamCode: string; items: typeof stickers }>();
-
+    const map  = new Map<string, { teamCode: string; items: typeof stickers }>();
     for (const s of stickers) {
       const key      = s.team?.trim() || "Copa do Mundo";
       const teamCode = teamCodeFromSticker(s.code);
@@ -94,42 +245,62 @@ function PublicCatalog() {
     return Array.from(map.entries());
   }, [stickers, search]);
 
-  // Carrinho
-  const cartTotal = cart.reduce((acc, i) => acc + i.qty, 0);
-  const cartValue = cart.reduce((acc, i) => acc + i.qty * i.price, 0);
+  // ── Ações do carrinho ───────────────────────────────────────────────────────
+  const addToCart = async (s: (typeof stickers)[number]) => {
+    const avail    = availableQty(s);
+    const existing = cart.find((c) => c.id === s.id);
 
-  const addToCart = (s: typeof stickers[number]) => {
-    setCart((prev) => {
-      const existing = prev.find((c) => c.id === s.id);
-      if (existing) {
-        if (existing.qty >= existing.maxQty) {
-          toast.warning("Quantidade máxima disponível atingida");
-          return prev;
-        }
-        return prev.map((c) => c.id === s.id ? { ...c, qty: c.qty + 1 } : c);
+    if (existing) {
+      if (existing.qty >= avail) {
+        toast.warning("Quantidade máxima disponível atingida");
+        return;
       }
-      return [...prev, {
-        id:     s.id,
-        code:   s.code ?? "",
-        name:   s.name,
-        team:   s.team ?? "",
-        price:  Number(s.price ?? 0),
-        qty:    1,
-        maxQty: s.quantity,
-      }];
-    });
-    toast.success(`${s.code} adicionada!`);
+      const newQty = existing.qty + 1;
+      setCart((prev) =>
+        prev.map((c) => (c.id === s.id ? { ...c, qty: newQty } : c))
+      );
+      await dbReserve(sessionId, s.id, newQty);
+    } else {
+      if (avail <= 0) {
+        toast.warning("Figurinha indisponível no momento");
+        return;
+      }
+      setCart((prev) => [
+        ...prev,
+        {
+          id:     s.id,
+          code:   s.code ?? "",
+          name:   s.name,
+          team:   s.team ?? "",
+          price:  Number(s.price ?? 0),
+          qty:    1,
+          maxQty: avail,
+        },
+      ]);
+      await dbReserve(sessionId, s.id, 1);
+    }
+    qc.invalidateQueries({ queryKey: ["cart-reservations"] });
+    toast.success(`${fmtCode(s.code)} adicionada ao carrinho!`);
   };
 
-  const removeFromCart = (id: string) => setCart((p) => p.filter((c) => c.id !== id));
-
-  const changeQty = (id: string, delta: number) => {
-    setCart((prev) => prev.map((c) => {
-      if (c.id !== id) return c;
-      return { ...c, qty: Math.max(1, Math.min(c.maxQty, c.qty + delta)) };
-    }));
+  const removeFromCart = async (id: string) => {
+    setCart((p) => p.filter((c) => c.id !== id));
+    await dbRelease(sessionId, id);
+    qc.invalidateQueries({ queryKey: ["cart-reservations"] });
   };
 
+  const changeQty = async (id: string, delta: number) => {
+    const item = cart.find((c) => c.id === id);
+    if (!item) return;
+    const newQty = Math.max(1, Math.min(item.maxQty, item.qty + delta));
+    setCart((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, qty: newQty } : c))
+    );
+    await dbReserve(sessionId, id, newQty);
+    qc.invalidateQueries({ queryKey: ["cart-reservations"] });
+  };
+
+  // ── Envio do pedido ─────────────────────────────────────────────────────────
   const sendOrder = async () => {
     if (!buyerName.trim())  { toast.error("Digite seu nome"); return; }
     if (!buyerPhone.trim()) { toast.error("Digite seu WhatsApp"); return; }
@@ -137,7 +308,6 @@ function PublicCatalog() {
 
     setSending(true);
     try {
-      // Salva pedido no banco vinculado ao vendedor
       const { data: order, error: orderErr } = await supabase
         .from("orders")
         .insert({
@@ -163,9 +333,17 @@ function PublicCatalog() {
       );
       if (itemsErr) throw itemsErr;
 
-      // Monta mensagem WhatsApp para o vendedor
-      const sellerPhone = (seller?.whatsapp ?? "").replace(/\D/g, "");
-      const linhas = cart.map((c) => `• ${c.code} — ${c.name} × ${c.qty} = ${brl(c.qty * c.price)}`);
+      // Reservas temporárias → agora são pedido; libera do cart_reservations
+      await dbReleaseAll(sessionId);
+      qc.invalidateQueries({ queryKey: ["cart-reservations"] });
+      qc.invalidateQueries({ queryKey: ["public-stickers", userId] });
+
+      // Monta mensagem WhatsApp
+      const sellerPhone = (seller?.whatsapp ?? SELLER_PHONE).replace(/\D/g, "");
+      const linhas = cart.map(
+        (c) =>
+          `• ${fmtCode(c.code)} — ${fmtName(c.name)} × ${c.qty} = ${brl(c.qty * c.price)}`
+      );
       const msg = [
         `🏷️ *Pedido de Figurinhas Copa 2026*`,
         ``,
@@ -180,12 +358,10 @@ function PublicCatalog() {
         `🆔 Pedido: #${order.id.slice(0, 8).toUpperCase()}`,
       ].join("\n");
 
-      const waUrl = sellerPhone
-        ? `https://wa.me/55${sellerPhone}?text=${encodeURIComponent(msg)}`
-        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-
+      const waUrl = `https://wa.me/55${sellerPhone}?text=${encodeURIComponent(msg)}`;
       window.open(waUrl, "_blank");
       toast.success("Pedido registrado! Abrindo WhatsApp...");
+      clearAllTimers();
       setCart([]); setCartOpen(false); setBuyerName(""); setBuyerPhone("");
     } catch (e: any) {
       toast.error("Erro ao enviar: " + (e?.message ?? String(e)));
@@ -196,9 +372,55 @@ function PublicCatalog() {
 
   const sellerName = seller?.display_name ?? "Vendedor";
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+
+      {/* ── Modal de inatividade ── */}
+      {inactiveModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-4">
+          <div className="bg-card rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="h-14 w-14 rounded-full bg-amber-100 flex items-center justify-center">
+                <Clock className="h-7 w-7 text-amber-500" />
+              </div>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Ainda está aí?</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Suas figurinhas estão reservadas por mais{" "}
+                <span className="font-semibold text-amber-600">
+                  {Math.floor(confirmSecs / 60)}:{String(confirmSecs % 60).padStart(2, "0")}
+                </span>
+                . Depois disso voltam para o estoque.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 text-red-600 border-red-200"
+                onClick={triggerAbandon}
+              >
+                Liberar carrinho
+              </Button>
+              <Button
+                className="flex-1 bg-green-600 hover:bg-green-700"
+                onClick={() => {
+                  setInactiveModal(false);
+                  clearTimeout(abandonTimer.current);
+                  clearInterval(countdownTimer.current);
+                  resetInactivity();
+                  toast.success("Ótimo! Suas reservas foram mantidas.");
+                }}
+              >
+                Sim, ainda estou aqui!
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Header ── */}
       <header className="bg-card border-b sticky top-0 z-20 backdrop-blur bg-card/95">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
           <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center shrink-0">
@@ -206,7 +428,9 @@ function PublicCatalog() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-sm">Catálogo — {sellerName}</div>
-            <div className="text-xs text-muted-foreground">{stickers.length} figurinhas disponíveis · Copa 2026</div>
+            <div className="text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground">{totalUnits}</span> figurinhas em estoque · Copa 2026
+            </div>
           </div>
           <Button
             variant="outline"
@@ -219,13 +443,15 @@ function PublicCatalog() {
                 {cartTotal}
               </Badge>
             )}
-            <span className="hidden sm:inline">{cartTotal > 0 ? `${cartTotal} iten${cartTotal > 1 ? "s" : ""}` : "Carrinho"}</span>
+            <span className="hidden sm:inline">
+              {cartTotal > 0 ? `${cartTotal} iten${cartTotal > 1 ? "s" : ""}` : "Carrinho"}
+            </span>
           </Button>
         </div>
       </header>
 
       <div className="max-w-3xl mx-auto px-4 py-4 space-y-4">
-        {/* Busca */}
+        {/* ── Busca ── */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -244,7 +470,9 @@ function PublicCatalog() {
             <p className="font-medium">Nenhuma figurinha disponível no momento.</p>
           </div>
         ) : groups.length === 0 ? (
-          <div className="text-center py-10 text-muted-foreground">Nenhum resultado para "{search}".</div>
+          <div className="text-center py-10 text-muted-foreground">
+            Nenhum resultado para "{search}".
+          </div>
         ) : (
           <div className="space-y-6 pb-8">
             {groups.map(([team, { teamCode, items }]) => {
@@ -257,37 +485,84 @@ function PublicCatalog() {
                       : <span className="text-base">🏆</span>
                     }
                     <span className="font-semibold text-sm">{team}</span>
-                    <span className="text-xs text-muted-foreground ml-auto">{items.length} disponíve{items.length > 1 ? "is" : "l"}</span>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      {items.length} tipo{items.length > 1 ? "s" : ""}
+                    </span>
                   </div>
+
                   <div className="space-y-1">
                     {items.map((s) => {
                       const inCart = cart.find((c) => c.id === s.id);
+                      const avail  = availableQty(s);
+                      const price  = Number(s.price ?? 0);
+                      const esgotado = avail <= 0 && !inCart;
+
                       return (
-                        <div key={s.id} className="flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/50 transition-colors">
-                          <span className="font-mono text-xs font-bold bg-muted px-2 py-1 rounded w-16 text-center shrink-0">
-                            {s.code}
+                        <div
+                          key={s.id}
+                          className={`flex items-center gap-2 py-2 px-2 rounded-lg transition-colors ${
+                            esgotado
+                              ? "opacity-50 bg-muted/30"
+                              : inCart
+                              ? "bg-green-50 dark:bg-green-950/20"
+                              : "hover:bg-muted/50"
+                          }`}
+                        >
+                          {/* Código */}
+                          <span className={`font-mono text-xs font-bold px-2 py-1 rounded w-16 text-center shrink-0 ${
+                            inCart
+                              ? "bg-green-100 text-green-700"
+                              : esgotado
+                              ? "bg-muted text-muted-foreground/60"
+                              : "bg-muted text-foreground"
+                          }`}>
+                            {fmtCode(s.code)}
                           </span>
+
+                          {/* Info */}
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm truncate">{s.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {s.quantity} disponíve{s.quantity > 1 ? "is" : "l"}
-                              {Number(s.price) > 0 && ` · ${brl(Number(s.price))}`}
+                            <div className="text-sm truncate">{fmtName(s.name)}</div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {price > 0 && (
+                                <span className="text-xs font-bold text-green-700">{brl(price)}</span>
+                              )}
+                              <span className="text-xs text-muted-foreground">
+                                {esgotado
+                                  ? "Indisponível"
+                                  : `${avail} disponíve${avail > 1 ? "is" : "l"}`}
+                              </span>
                             </div>
                           </div>
+
+                          {/* Controles */}
                           {inCart ? (
                             <div className="flex items-center gap-1 shrink-0">
-                              <button className="h-7 w-7 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50" onClick={() => changeQty(s.id, -1)}>
+                              <button
+                                className="h-7 w-7 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50"
+                                onClick={() =>
+                                  inCart.qty === 1
+                                    ? removeFromCart(s.id)
+                                    : changeQty(s.id, -1)
+                                }
+                              >
                                 <Minus className="h-3.5 w-3.5" />
                               </button>
-                              <span className="w-6 text-center text-sm font-black text-primary">{inCart.qty}</span>
-                              <button className="h-7 w-7 rounded-lg flex items-center justify-center text-green-600 hover:bg-green-50" onClick={() => changeQty(s.id, 1)}>
+                              <span className="w-6 text-center text-sm font-black text-green-700">
+                                {inCart.qty}
+                              </span>
+                              <button
+                                className="h-7 w-7 rounded-lg flex items-center justify-center text-green-600 hover:bg-green-50 disabled:opacity-30"
+                                disabled={inCart.qty >= avail}
+                                onClick={() => changeQty(s.id, 1)}
+                              >
                                 <Plus className="h-3.5 w-3.5" />
                               </button>
                             </div>
                           ) : (
                             <button
+                              disabled={esgotado}
                               onClick={() => addToCart(s)}
-                              className="h-8 px-3 rounded-lg border border-primary/30 text-primary text-xs font-semibold hover:bg-primary/5 transition-colors shrink-0"
+                              className="h-8 px-3 rounded-lg border border-primary/30 text-primary text-xs font-semibold hover:bg-primary/5 transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                               + Quero
                             </button>
@@ -303,7 +578,7 @@ function PublicCatalog() {
         )}
       </div>
 
-      {/* Carrinho — bottom sheet */}
+      {/* ── Carrinho — bottom sheet ── */}
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex flex-col">
           <div className="flex-1 bg-black/50" onClick={() => setCartOpen(false)} />
@@ -311,54 +586,101 @@ function PublicCatalog() {
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <div className="font-semibold">
                 Carrinho · {cartTotal} figurinha{cartTotal !== 1 ? "s" : ""}
-                {cartValue > 0 && <span className="text-muted-foreground font-normal text-sm ml-2">· {brl(cartValue)}</span>}
+                {cartValue > 0 && (
+                  <span className="text-muted-foreground font-normal text-sm ml-2">
+                    · {brl(cartValue)}
+                  </span>
+                )}
               </div>
-              <button onClick={() => setCartOpen(false)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-muted">
+              <button
+                onClick={() => setCartOpen(false)}
+                className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-muted"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
+            {/* Aviso de reserva */}
+            {cart.length > 0 && (
+              <div className="mx-4 mt-3 mb-1 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-500" />
+                <span>
+                  Suas figurinhas ficam reservadas por <strong>15 minutos</strong> de inatividade.
+                  Confirme o pedido pelo WhatsApp para garantir.
+                </span>
+              </div>
+            )}
+
             <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1">
               {cart.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground text-sm">Carrinho vazio</div>
-              ) : cart.map((item) => (
-                <div key={item.id} className="flex items-center gap-2 py-1.5">
-                  <span className="font-mono text-xs font-bold bg-muted px-2 py-1 rounded w-14 text-center shrink-0">{item.code}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm truncate">{item.name}</div>
-                    {item.price > 0 && <div className="text-xs text-muted-foreground">{brl(item.price)} × {item.qty} = {brl(item.price * item.qty)}</div>}
-                  </div>
-                  <div className="flex items-center gap-0.5 shrink-0">
-                    <button className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted text-red-500" onClick={() => changeQty(item.id, -1)}>
-                      <Minus className="h-3 w-3" />
-                    </button>
-                    <span className="w-6 text-center text-sm font-bold">{item.qty}</span>
-                    <button className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted text-green-600" onClick={() => changeQty(item.id, 1)}>
-                      <Plus className="h-3 w-3" />
-                    </button>
-                    <button className="h-7 w-7 flex items-center justify-center rounded hover:bg-red-50 text-red-400 ml-1" onClick={() => removeFromCart(item.id)}>
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
+                <div className="text-center py-10 text-muted-foreground text-sm">
+                  Carrinho vazio
                 </div>
-              ))}
+              ) : (
+                cart.map((item) => (
+                  <div key={item.id} className="flex items-center gap-2 py-1.5">
+                    <span className="font-mono text-xs font-bold bg-muted px-2 py-1 rounded w-14 text-center shrink-0">
+                      {fmtCode(item.code)}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm truncate">{fmtName(item.name)}</div>
+                      {item.price > 0 && (
+                        <div className="text-xs text-muted-foreground">
+                          {brl(item.price)} × {item.qty} ={" "}
+                          <span className="font-semibold text-green-700">
+                            {brl(item.price * item.qty)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <button
+                        className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted text-red-500"
+                        onClick={() =>
+                          item.qty === 1 ? removeFromCart(item.id) : changeQty(item.id, -1)
+                        }
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <span className="w-6 text-center text-sm font-bold">{item.qty}</span>
+                      <button
+                        className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted text-green-600 disabled:opacity-30"
+                        disabled={item.qty >= item.maxQty}
+                        onClick={() => changeQty(item.id, 1)}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                      <button
+                        className="h-7 w-7 flex items-center justify-center rounded hover:bg-red-50 text-red-400 ml-1"
+                        onClick={() => removeFromCart(item.id)}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
             {cart.length > 0 && (
               <div className="px-4 py-4 border-t space-y-3">
+                {/* Total */}
                 {cartValue > 0 && (
-                  <div className="flex justify-between font-semibold text-sm">
-                    <span>Total</span>
-                    <span className="text-green-700">{brl(cartValue)}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      {cartTotal} figurinha{cartTotal !== 1 ? "s"}
+                    </span>
+                    <span className="text-lg font-black text-green-700">{brl(cartValue)}</span>
                   </div>
                 )}
+
                 <Input
                   placeholder="Seu nome *"
                   value={buyerName}
                   onChange={(e) => setBuyerName(e.target.value)}
                 />
                 <Input
-                  placeholder="Seu WhatsApp com DDD *"
+                  placeholder="Seu WhatsApp com DDD * (ex: 15999990000)"
                   value={buyerPhone}
                   onChange={(e) => setBuyerPhone(e.target.value)}
                   type="tel"
@@ -369,10 +691,10 @@ function PublicCatalog() {
                   disabled={sending}
                 >
                   <Send className="h-4 w-4" />
-                  {sending ? "Enviando..." : "Enviar pedido pelo WhatsApp"}
+                  {sending ? "Enviando..." : `Enviar pedido — ${brl(cartValue)}`}
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">
-                  Você será redirecionado ao WhatsApp do vendedor para confirmar.
+                  Você será redirecionado ao WhatsApp do vendedor para confirmar o PIX.
                 </p>
               </div>
             )}

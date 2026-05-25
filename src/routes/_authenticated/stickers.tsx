@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StickerFormDialog, type StickerInput } from "@/components/StickerFormDialog";
-import { brl, conditionLabel, statusLabel } from "@/lib/format";
+import { brl, conditionLabel, statusLabel, fmtCode, fmtName } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/stickers")({
   component: StickersPage,
@@ -67,8 +67,8 @@ function StickersPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      {s.code && <div className="text-[11px] text-muted-foreground">#{s.code}</div>}
-                      <div className="font-semibold truncate text-sm">{s.name}</div>
+                      {s.code && <div className="text-[11px] text-muted-foreground">#{fmtCode(s.code)}</div>}
+                      <div className="font-semibold truncate text-sm">{fmtName(s.name)}</div>
                       <div className="text-xs text-muted-foreground truncate">
                         {s.albums?.name ?? "Sem álbum"}{s.team ? ` · ${s.team}` : ""}
                       </div>

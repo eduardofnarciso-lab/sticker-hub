@@ -1,3 +1,15 @@
+// Formata código: "ALG1" → "ALG 1", "ALG10" → "ALG 10"
+export const fmtCode = (code: string | null | undefined): string => {
+  if (!code) return "";
+  return code.replace(/([A-Za-z]+)(\d)/, "$1 $2");
+};
+
+// Substitui "FOIL" por "Brilhante" no nome da figurinha
+export const fmtName = (name: string | null | undefined): string => {
+  if (!name) return "";
+  return name.replace(/\bFOIL\b/gi, "Brilhante");
+};
+
 export const brl = (v: number | null | undefined) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v ?? 0));
 
