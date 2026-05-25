@@ -36,6 +36,11 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Configuração nginx com suporte a SPA (client-side routing)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Entrypoint: gera env-config.js em runtime com as vars do EasyPanel
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 EXPOSE 80
 
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
