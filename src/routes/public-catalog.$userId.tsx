@@ -359,21 +359,19 @@ function PublicCatalog() {
 
       // Monta link WhatsApp — exibido como botão <a> para funcionar em qualquer celular
       const sellerPhone = (seller?.whatsapp ?? SELLER_PHONE).replace(/\D/g, "");
-      const linhas = cart.map(
-        (c) => `• ${fmtCode(c.code)} — ${fmtName(c.name)} × ${c.qty} = ${brl(c.qty * c.price)}`
-      );
+      const totalQty   = cart.reduce((sum, c) => sum + c.qty, 0);
+      const shortId    = String(orderId).slice(0, 8).toUpperCase();
       const msg = [
         `🏷️ *Pedido de Figurinhas Copa 2026*`,
         ``,
         `👤 *Nome:* ${buyerName.trim()}`,
         `📱 *WhatsApp:* ${buyerPhone.trim()}`,
         ``,
-        `📋 *Figurinhas:*`,
-        ...linhas,
+        `📋 *Figurinhas:* #pedido ${totalQty} figurinhas`,
         ``,
         `💰 *Total: ${brl(cartValue)}*`,
         ``,
-        `🆔 Pedido: #${String(orderId).slice(0, 8).toUpperCase()}`,
+        `🆔 Pedido: #${shortId}`,
       ].join("\n");
 
       setWaUrl(`https://wa.me/55${sellerPhone}?text=${encodeURIComponent(msg)}`);
