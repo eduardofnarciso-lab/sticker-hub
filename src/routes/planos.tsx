@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, MessageCircle, Sticker, Zap, Star, Trophy } from "lucide-react";
+import { Check, MessageCircle, Sticker, Star, Bot, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/planos")({
   component: PlanosPage,
@@ -12,93 +12,49 @@ export const Route = createFileRoute("/planos")({
 });
 
 const WHATSAPP = "5515991460543";
-const WA_MSG  = encodeURIComponent("Olá! Quero saber mais sobre os planos para vender figurinhas na plataforma SpiritRelay.");
+const WA_MSG   = encodeURIComponent("Olá! Quero saber mais sobre os planos para vender figurinhas na plataforma SpiritRelay.");
 
-const planos = [
-  {
-    id:    "starter",
-    nome:  "Starter",
-    preco: 20,
-    limite: "até 500 figurinhas",
-    icon:  Sticker,
-    color: "blue",
-    destaque: false,
-    recursos: [
-      "Catálogo público com link exclusivo",
-      "Pedidos via WhatsApp",
-      "Controle de estoque",
-      "Reserva automática por 15 min",
-      "Suporte via WhatsApp",
-    ],
-  },
-  {
-    id:    "pro",
-    nome:  "Pro",
-    preco: 50,
-    limite: "até 2.500 figurinhas",
-    icon:  Zap,
-    color: "green",
-    destaque: true,
-    recursos: [
-      "Tudo do Starter",
-      "Notificações automáticas via WhatsApp",
-      "Verificação de estoque por mensagem",
-      "Descontos por volume configuráveis",
-      "Relatórios de vendas",
-      "Suporte prioritário",
-    ],
-  },
-  {
-    id:    "elite",
-    nome:  "Elite",
-    preco: 100,
-    limite: "5.000+ figurinhas",
-    icon:  Trophy,
-    color: "amber",
-    destaque: false,
-    recursos: [
-      "Tudo do Pro",
-      "Múltiplos álbuns",
-      "Integração com n8n/automações",
-      "Dashboard avançado",
-      "Suporte VIP",
-      "Configurações personalizadas",
-    ],
-  },
+// Recursos comuns a todos os planos simples
+const RECURSOS_BASE = [
+  "Catálogo público com link exclusivo",
+  "Pedidos recebidos via WhatsApp",
+  "Controle de estoque completo",
+  "Reserva automática por 15 min",
+  "Descontos por volume automáticos",
+  "Dashboard de vendas",
+  "Suporte via WhatsApp",
 ];
 
-const colorMap: Record<string, {
-  bg: string; border: string; badge: string; btn: string; icon: string; check: string;
-}> = {
-  blue: {
-    bg:     "bg-blue-50",
-    border: "border-blue-200",
-    badge:  "bg-blue-100 text-blue-700",
-    btn:    "bg-blue-600 hover:bg-blue-700",
-    icon:   "text-blue-500",
-    check:  "text-blue-600",
-  },
-  green: {
-    bg:     "bg-green-50",
-    border: "border-green-300",
-    badge:  "bg-green-600 text-white",
-    btn:    "bg-green-600 hover:bg-green-700",
-    icon:   "text-green-500",
-    check:  "text-green-600",
-  },
-  amber: {
-    bg:     "bg-amber-50",
-    border: "border-amber-200",
-    badge:  "bg-amber-100 text-amber-700",
-    btn:    "bg-amber-500 hover:bg-amber-600",
-    icon:   "text-amber-500",
-    check:  "text-amber-600",
-  },
+const planos = [
+  { nome: "Starter", preco: 20,  limite: "até 500 figurinhas",   color: "blue"  },
+  { nome: "Pro",     preco: 50,  limite: "até 2.500 figurinhas", color: "green", destaque: true },
+  { nome: "Elite",   preco: 100, limite: "até 5.000 figurinhas", color: "amber" },
+];
+
+const colorMap: Record<string, { bg: string; border: string; badge: string; btn: string; check: string }> = {
+  blue:  { bg: "bg-blue-50",   border: "border-blue-200",  badge: "bg-blue-100 text-blue-700",   btn: "bg-blue-600 hover:bg-blue-700",   check: "text-blue-600"  },
+  green: { bg: "bg-green-50",  border: "border-green-300", badge: "bg-green-600 text-white",      btn: "bg-green-600 hover:bg-green-700", check: "text-green-600" },
+  amber: { bg: "bg-amber-50",  border: "border-amber-200", badge: "bg-amber-100 text-amber-700",  btn: "bg-amber-500 hover:bg-amber-600", check: "text-amber-600" },
 };
+
+const RECURSOS_ENTERPRISE = [
+  "Figurinhas ilimitadas",
+  "Envio automático de PIX via WhatsApp",
+  "Verificação de estoque por mensagem",
+  "Resposta automática para listas de figurinhas",
+  "Notificação automática de novos pedidos",
+  "Integração completa com n8n e Evolution API",
+  "Automação de todo o fluxo de venda",
+  "Múltiplos álbuns e coleções",
+  "Relatórios avançados",
+  "Configurações personalizadas",
+  "Suporte VIP com atendimento dedicado",
+  "Implantação e treinamento inclusos",
+];
 
 function PlanosPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white pb-16">
 
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-20 shadow-sm">
@@ -122,7 +78,7 @@ function PlanosPage() {
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-4 py-12 space-y-12">
+      <div className="max-w-5xl mx-auto px-4 py-12 space-y-14">
 
         {/* Hero */}
         <div className="text-center space-y-4">
@@ -135,70 +91,24 @@ function PlanosPage() {
             <span className="text-green-600">de forma profissional</span>
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto text-base">
-            Catálogo online, pedidos via WhatsApp, controle de estoque e notificações automáticas.
-            Tudo em um só lugar, a partir de <strong>R$20/mês</strong>.
+            Catálogo online, pedidos via WhatsApp e controle de estoque completo.
+            Planos a partir de <strong>R$20/mês</strong>.
           </p>
         </div>
 
-        {/* Tabela de descontos por volume */}
-        <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-4">
-          <div className="text-center">
-            <h2 className="text-lg font-bold">Descontos automáticos por volume</h2>
-            <p className="text-sm text-muted-foreground mt-1">Quanto mais figurinhas no pedido, maior o desconto aplicado automaticamente</p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2 font-semibold text-muted-foreground">Quantidade no pedido</th>
-                  <th className="text-center py-2 font-semibold text-muted-foreground">Figurinha normal</th>
-                  <th className="text-center py-2 font-semibold text-muted-foreground">Figurinha brilhante</th>
-                  <th className="text-center py-2 font-semibold text-muted-foreground">Desconto</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                <tr>
-                  <td className="py-2.5 text-muted-foreground">1 – 149 figurinhas</td>
-                  <td className="py-2.5 text-center font-medium">R$ 1,00</td>
-                  <td className="py-2.5 text-center font-medium">R$ 2,00</td>
-                  <td className="py-2.5 text-center text-muted-foreground">—</td>
-                </tr>
-                <tr className="bg-blue-50/50">
-                  <td className="py-2.5 font-medium">150 – 249 figurinhas</td>
-                  <td className="py-2.5 text-center font-bold text-blue-700">R$ 0,95</td>
-                  <td className="py-2.5 text-center font-bold text-blue-700">R$ 1,95</td>
-                  <td className="py-2.5 text-center"><span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">5% off</span></td>
-                </tr>
-                <tr className="bg-green-50/50">
-                  <td className="py-2.5 font-medium">250 – 499 figurinhas</td>
-                  <td className="py-2.5 text-center font-bold text-green-700">R$ 0,90</td>
-                  <td className="py-2.5 text-center font-bold text-green-700">R$ 1,90</td>
-                  <td className="py-2.5 text-center"><span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">10% off</span></td>
-                </tr>
-                <tr className="bg-amber-50/50">
-                  <td className="py-2.5 font-medium">500+ figurinhas</td>
-                  <td className="py-2.5 text-center font-bold text-amber-700">R$ 0,85</td>
-                  <td className="py-2.5 text-center font-bold text-amber-700">R$ 1,85</td>
-                  <td className="py-2.5 text-center"><span className="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">15% off</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Planos */}
+        {/* Planos simples — grid 3 colunas */}
         <div className="space-y-4">
           <div className="text-center">
-            <h2 className="text-2xl font-black">Escolha seu plano</h2>
-            <p className="text-muted-foreground text-sm mt-1">Sem fidelidade. Cancele quando quiser.</p>
+            <h2 className="text-2xl font-black">Planos</h2>
+            <p className="text-muted-foreground text-sm mt-1">Todos os planos incluem os mesmos recursos — só muda o limite de figurinhas.</p>
           </div>
+
           <div className="grid md:grid-cols-3 gap-6">
             {planos.map((plano) => {
-              const c   = colorMap[plano.color];
-              const Icon = plano.icon;
+              const c = colorMap[plano.color];
               return (
                 <div
-                  key={plano.id}
+                  key={plano.nome}
                   className={`relative rounded-2xl border-2 p-6 flex flex-col gap-5 shadow-sm ${c.bg} ${c.border} ${
                     plano.destaque ? "shadow-lg scale-[1.02]" : ""
                   }`}
@@ -212,24 +122,19 @@ function PlanosPage() {
                   )}
 
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Icon className={`h-5 w-5 ${c.icon}`} />
-                      <span className="font-bold text-lg">{plano.nome}</span>
-                    </div>
+                    <div className="font-bold text-xl">{plano.nome}</div>
                     <div className={`text-xs font-semibold px-2 py-0.5 rounded-full w-fit ${c.badge}`}>
                       {plano.limite}
                     </div>
                   </div>
 
-                  <div>
-                    <div className="flex items-end gap-1">
-                      <span className="text-4xl font-black">R${plano.preco}</span>
-                      <span className="text-muted-foreground text-sm mb-1">/mês</span>
-                    </div>
+                  <div className="flex items-end gap-1">
+                    <span className="text-4xl font-black">R${plano.preco}</span>
+                    <span className="text-muted-foreground text-sm mb-1">/mês</span>
                   </div>
 
                   <ul className="space-y-2 flex-1">
-                    {plano.recursos.map((r) => (
+                    {RECURSOS_BASE.map((r) => (
                       <li key={r} className="flex items-start gap-2 text-sm">
                         <Check className={`h-4 w-4 shrink-0 mt-0.5 ${c.check}`} />
                         <span>{r}</span>
@@ -251,6 +156,69 @@ function PlanosPage() {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* Plano Enterprise — card especial full width */}
+        <div className="relative rounded-3xl border-2 border-slate-800 bg-slate-900 text-white p-8 md:p-10 shadow-2xl overflow-hidden">
+          {/* Fundo decorativo */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl" />
+          </div>
+
+          <div className="relative z-10 grid md:grid-cols-2 gap-10">
+            {/* Lado esquerdo */}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 bg-purple-500/20 border border-purple-400/30 text-purple-300 text-xs font-bold px-3 py-1.5 rounded-full">
+                  <Zap className="h-3.5 w-3.5" />
+                  Automação completa
+                </div>
+                <div className="flex items-center gap-3">
+                  <Bot className="h-8 w-8 text-purple-400" />
+                  <h2 className="text-3xl font-black">Enterprise</h2>
+                </div>
+                <p className="text-slate-400 text-sm">
+                  Para quem vende em alto volume e quer o fluxo 100% automatizado — do pedido ao PIX, sem intervenção manual.
+                </p>
+              </div>
+
+              <div>
+                <div className="flex items-end gap-1">
+                  <span className="text-5xl font-black">R$1.000</span>
+                  <span className="text-slate-400 text-sm mb-1.5">/mês</span>
+                </div>
+                <div className="text-slate-400 text-xs mt-1">Figurinhas ilimitadas · Implantação inclusa</div>
+              </div>
+
+              <a
+                href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
+                  "Olá! Tenho interesse no plano Enterprise da SpiritRelay. Quero saber mais sobre a automação completa."
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-white text-slate-900 font-bold px-6 py-3.5 rounded-xl hover:bg-slate-100 transition-colors shadow-lg text-sm"
+              >
+                <MessageCircle className="h-4 w-4 text-green-600" />
+                Falar com especialista
+              </a>
+            </div>
+
+            {/* Lado direito — recursos */}
+            <div className="space-y-3">
+              <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">O que está incluído</p>
+              <ul className="space-y-2.5">
+                {RECURSOS_ENTERPRISE.map((r) => (
+                  <li key={r} className="flex items-start gap-2.5 text-sm">
+                    <div className="h-5 w-5 rounded-full bg-purple-500/20 border border-purple-400/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="h-3 w-3 text-purple-400" />
+                    </div>
+                    <span className="text-slate-200">{r}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -276,7 +244,6 @@ function PlanosPage() {
       <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur border-t py-2 text-center text-[10px] text-muted-foreground/50 z-10">
         Desenvolvido por <span className="font-semibold">SpiritRelay</span> · Empresa de Desenvolvimento
       </footer>
-      <div className="h-10" /> {/* espaço para o footer não cobrir conteúdo */}
     </div>
   );
 }
