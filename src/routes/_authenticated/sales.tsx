@@ -173,7 +173,7 @@ function OrdersSection({ userId }: { userId: string }) {
       const { data, error } = await supabase
         .from("orders")
         .select("*, order_items(id, sticker_code, sticker_name, quantity, unit_price)")
-        .eq("seller_id", userId)
+        .eq("user_id", userId)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Order[];
@@ -300,7 +300,7 @@ function SalesPage() {
       const { count } = await supabase
         .from("orders")
         .select("id", { count: "exact", head: true })
-        .eq("seller_id", user!.id)
+        .eq("user_id", user!.id)
         .eq("status", "pendente");
       return count ?? 0;
     },
