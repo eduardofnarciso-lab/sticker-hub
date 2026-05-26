@@ -35,33 +35,42 @@ function Dashboard() {
     queryKey: ["dashboard-stats", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
+      // Estoque atual
       const { data: stickers } = await supabase
         .from("stickers")
         .select("code, quantity, price, status")
         .eq("user_id", user!.id);
 
+      // Pedidos do catálogo (aprovados e pendentes)
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("status, total_value")
+        .eq("user_id", user!.id);
+
       const list = stickers ?? [];
-      // Conta só os códigos válidos do álbum Copa 2026 (mesma base do Figurinhas)
-      const comEstoque  = list.filter((s) => (s.quantity ?? 0) > 0 && VALID_CODES.has(s.code ?? ""));
-      const pendentes   = list.filter((s) => s.status === "reservada");
-      const vendidas    = list.filter((s) => s.status === "vendida");
+      const comEstoque = list.filter((s) => (s.quantity ?? 0) > 0 && VALID_CODES.has(s.code ?? ""));
 
       const valorEstimado = comEstoque.reduce(
         (acc, s) => acc + stickerPrice(s.code) * (s.quantity ?? 0), 0
       );
-      const valorPendente = pendentes.reduce(
-        (acc, s) => acc + stickerPrice(s.code) * (s.quantity ?? 0), 0
-      );
-      const valorVendido = vendidas.reduce(
-        (acc, s) => acc + stickerPrice(s.code) * (s.quantity ?? 0), 0
-      );
+
       const normais   = comEstoque.filter((s) => stickerPrice(s.code) === 1)
                                   .reduce((a, s) => a + s.quantity, 0);
       const especiais = comEstoque.filter((s) => stickerPrice(s.code) === 2)
                                   .reduce((a, s) => a + s.quantity, 0);
       const totalEmEstoque = normais + especiais;
 
-      return { valorEstimado, valorPendente, valorVendido, normais, especiais, totalEmEstoque };
+      // Valores vindos da tabela orders
+      const ordersData     = orders ?? [];
+      const valorVendido   = ordersData
+        .filter((o) => o.status === "aprovado")
+        .reduce((acc, o) => acc + Number(o.total_value), 0);
+      const valorPendente  = ordersData
+        .filter((o) => o.status === "pendente")
+        .reduce((acc, o) => acc + Number(o.total_value), 0);
+      const qtdPendentes   = ordersData.filter((o) => o.status === "pendente").length;
+
+      return { valorEstimado, valorPendente, valorVendido, normais, especiais, totalEmEstoque, qtdPendentes };
     },
   });
 
@@ -87,15 +96,15 @@ function Dashboard() {
     {
       label: "Valor Vendido",
       value: brl(data?.valorVendido ?? 0),
-      sub: "total já vendido",
+      sub: "pedidos aprovados",
       icon: BadgeDollarSign,
       color: "text-emerald-600",
       bg: "bg-emerald-50 border-emerald-200",
     },
     {
-      label: "Valor Pendente",
+      label: "Pendente",
       value: brl(data?.valorPendente ?? 0),
-      sub: "reservadas aguardando",
+      sub: `${data?.qtdPendentes ?? 0} pedido${(data?.qtdPendentes ?? 0) !== 1 ? "s" : ""} aguardando`,
       icon: Clock,
       color: "text-amber-600",
       bg: "bg-amber-50 border-amber-200",

@@ -501,6 +501,36 @@ function PublicCatalog() {
       </header>
 
       <div className="max-w-3xl mx-auto px-4 py-4 space-y-4">
+
+        {/* ── Banner informativo ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {/* CTA plataforma */}
+          <a
+            href="/planos"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2.5 bg-green-50 border border-green-200 rounded-xl px-3 py-2.5 hover:bg-green-100 transition-colors group"
+          >
+            <div className="h-8 w-8 rounded-lg bg-green-600 flex items-center justify-center shrink-0">
+              <Sticker className="h-4 w-4 text-white" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-green-700 leading-tight">Quer vender suas figurinhas?</div>
+              <div className="text-[11px] text-green-600/80">Clique e conheça nossa plataforma →</div>
+            </div>
+          </a>
+          {/* Descontos */}
+          <div className="flex items-center gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
+            <div className="h-8 w-8 rounded-lg bg-amber-500 flex items-center justify-center shrink-0 text-white font-black text-xs">
+              %
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-amber-700 leading-tight">Descontos por volume</div>
+              <div className="text-[11px] text-amber-600/90">150→5% · 250→10% · 500→15%</div>
+            </div>
+          </div>
+        </div>
+
         {/* ── Busca ── */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -789,10 +819,13 @@ function PublicCatalog() {
         </div>
       )}
 
-      {/* Footer */}
-      <div className="text-center py-6 text-[10px] text-muted-foreground/40">
+      {/* Espaço para o footer fixo não cobrir conteúdo */}
+      <div className="h-10" />
+
+      {/* Footer fixo */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-card/80 backdrop-blur border-t py-2 text-center text-[10px] text-muted-foreground/50 z-10">
         Desenvolvido por <span className="font-semibold">SpiritRelay</span> · Empresa de Desenvolvimento
-      </div>
+      </footer>
     </div>
   );
 }

@@ -72,21 +72,32 @@ function StockPage() {
     },
   });
 
+  const { data: orders = [] } = useQuery({
+    queryKey: ["orders-stats", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("orders")
+        .select("status, total_value")
+        .eq("user_id", user!.id);
+      return data ?? [];
+    },
+  });
+
   // Stats para os cards
   const stats = useMemo(() => {
     const disponiveis = stickers.filter((s) => s.quantity > 0 && s.status === "disponivel");
-    const pendentes   = stickers.filter((s) => s.status === "reservada");
-    const vendidas    = stickers.filter((s) => s.status === "vendida");
-
-    const valorEstimado = disponiveis.reduce((acc, s) => acc + stickerPrice(s.code) * s.quantity, 0);
-    const valorPendente = pendentes.reduce((acc, s) => acc + stickerPrice(s.code) * s.quantity, 0);
-    const valorVendido  = vendidas.reduce((acc, s) => acc + stickerPrice(s.code) * s.quantity, 0);
-
-    const normais  = disponiveis.filter((s) => stickerPrice(s.code) === 1).reduce((a, s) => a + s.quantity, 0);
+    const normais   = disponiveis.filter((s) => stickerPrice(s.code) === 1).reduce((a, s) => a + s.quantity, 0);
     const especiais = disponiveis.filter((s) => stickerPrice(s.code) === 2).reduce((a, s) => a + s.quantity, 0);
+    const valorEstimado = disponiveis.reduce((acc, s) => acc + stickerPrice(s.code) * s.quantity, 0);
 
-    return { valorEstimado, valorPendente, valorVendido, normais, especiais };
-  }, [stickers]);
+    // Vendidos e pendentes vêm da tabela orders
+    const valorVendido  = orders.filter((o) => o.status === "aprovado").reduce((acc, o) => acc + Number(o.total_value), 0);
+    const valorPendente = orders.filter((o) => o.status === "pendente").reduce((acc, o) => acc + Number(o.total_value), 0);
+    const qtdPendentes  = orders.filter((o) => o.status === "pendente").length;
+
+    return { valorEstimado, valorPendente, valorVendido, normais, especiais, qtdPendentes };
+  }, [stickers, orders]);
 
   const valorTotal = stats.valorEstimado;
 
@@ -143,7 +154,7 @@ function StockPage() {
       key: "vendida" as FilterKey,
       label: "Valor Vendido",
       value: brl(stats.valorVendido),
-      sub: "total já vendido",
+      sub: "pedidos aprovados",
       icon: BadgeDollarSign,
       color: "text-emerald-600",
       bg: "bg-emerald-50 border-emerald-200",
@@ -153,7 +164,7 @@ function StockPage() {
       key: "reservada" as FilterKey,
       label: "Valor Pendente",
       value: brl(stats.valorPendente),
-      sub: "reservadas / pendentes",
+      sub: `${stats.qtdPendentes} pedido${stats.qtdPendentes !== 1 ? "s" : ""} aguardando`,
       icon: Clock,
       color: "text-amber-600",
       bg: "bg-amber-50 border-amber-200",
