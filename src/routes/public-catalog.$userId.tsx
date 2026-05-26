@@ -364,9 +364,6 @@ function PublicCatalog() {
       const totalQty   = cart.reduce((sum, c) => sum + c.qty, 0);
       const shortId    = String(orderId).slice(0, 8).toUpperCase();
       const isTatui    = buyerCity.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "") === "tatui";
-      const linhas     = cart.map(
-        (c) => `• ${c.code} — ${c.name} × ${c.qty} = ${brl(c.qty * c.price)}`
-      );
       const msg = [
         `#pedido ${totalQty} figurinhas`,
         ``,
@@ -376,9 +373,7 @@ function PublicCatalog() {
         `📱 *WhatsApp:* ${buyerPhone.trim()}`,
         `🏙️ *Cidade:* ${buyerCity.trim()}${!isTatui ? " _(frete a combinar)_" : ""}`,
         ``,
-        `📋 *Figurinhas:*`,
-        ...linhas,
-        ``,
+        `🔢 *Quantidade:* ${totalQty} figurinha${totalQty !== 1 ? "s" : ""}`,
         `💰 *Total: ${brl(cartValue)}*`,
         ``,
         `🆔 Pedido: #${shortId}`,
