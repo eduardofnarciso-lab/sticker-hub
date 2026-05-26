@@ -7,7 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { brl, fmtCode, fmtName, stickerPrice, discountedPrice, discountLabel } from "@/lib/format";
-import { flagUrl } from "@/lib/copa2026Data";
+import { flagUrl, getAllSections } from "@/lib/copa2026Data";
+
+// Mapa teamCode → posição no álbum (calculado uma vez no módulo)
+const ALBUM_ORDER = new Map<string, number>(
+  getAllSections().map((s, i) => [s.teamCode, i])
+);
+
+// Número da figurinha dentro do time (ordena 1,2...10,11 em vez de 1,10,11...2)
+function stickerSortNum(code: string): number {
+  if (code === "00") return 0;
+  const m = code.match(/(\d+)$/);
+  return m ? parseInt(m[1], 10) : 999;
+}
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/public-catalog/$userId")({
@@ -248,7 +260,16 @@ function PublicCatalog() {
       if (!map.has(key)) map.set(key, { teamCode, items: [] });
       map.get(key)!.items.push(s);
     }
-    return Array.from(map.entries());
+    // Ordena itens dentro de cada grupo pela posição numérica no álbum (1,2,3...20)
+    for (const { items } of map.values()) {
+      items.sort((a, b) => stickerSortNum(a.code ?? "") - stickerSortNum(b.code ?? ""));
+    }
+    // Ordena grupos pela sequência oficial do álbum (Intro → Grupo A → B → ... → L)
+    return Array.from(map.entries()).sort(([, a], [, b]) => {
+      const ai = ALBUM_ORDER.get(a.teamCode) ?? 999;
+      const bi = ALBUM_ORDER.get(b.teamCode) ?? 999;
+      return ai - bi;
+    });
   }, [stickers, search]);
 
   // ── Ações do carrinho ───────────────────────────────────────────────────────
@@ -653,7 +674,7 @@ function PublicCatalog() {
                   Carrinho vazio
                 </div>
               ) : (
-                cart.map((item) => (
+                [...cart].sort((a, b) => a.code.localeCompare(b.code)).map((item) => (
                   <div key={item.id} className="flex items-center gap-2 py-1.5">
                     <span className="font-mono text-xs font-bold bg-muted px-2 py-1 rounded w-14 text-center shrink-0">
                       {fmtCode(item.code)}

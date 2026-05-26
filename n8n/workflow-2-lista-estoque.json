@@ -1,0 +1,131 @@
+{
+  "name": "Figurinhas — Lista WhatsApp → Verifica Estoque",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "figurinhas-lista",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-lista",
+      "name": "Webhook — Mensagem WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "ok",
+        "options": {}
+      },
+      "id": "respond-ok",
+      "name": "Responde OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [460, 160]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrai dados da mensagem recebida via Evolution API webhook\nconst body = $input.first().json.body || $input.first().json;\n\n// Evolution API envia assim:\nconst data    = body.data || body;\nconst msgText = data?.message?.conversation \n             || data?.message?.extendedTextMessage?.text \n             || '';\nconst from    = (data?.key?.remoteJid || '').replace('@s.whatsapp.net', '').replace(/\\D/g, '');\n\nif (!msgText || !from) return [];\n\n// Detecta se é uma lista de figurinhas\n// Aceita formatos: BRA1, BRA 1, BRA-1 — um por linha ou separado por vírgula\nconst lines = msgText\n  .toUpperCase()\n  .split(/[\\n,;]+/)\n  .map(l => l.trim().replace(/\\s+/, ''))\n  .filter(l => /^[A-Z]{2,3}\\d{1,2}$|^FWC\\d{1,2}$|^00$/.test(l));\n\nif (lines.length === 0) return []; // não é lista de figurinhas\n\nreturn [{ json: { from, codes: lines, raw: msgText } }];"
+      },
+      "id": "code-parse-lista",
+      "name": "Extrai lista de códigos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 340]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://ruqkuwnxsjiadkhqfmvx.supabase.co/rest/v1/stickers?select=code,name,quantity,status&status=eq.disponivel&quantity=gt.0&code=in.({{ $json.codes.map(c => `\"${c}\"`).join(',') }})",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "SUA_SUPABASE_ANON_KEY_AQUI"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer SUA_SUPABASE_ANON_KEY_AQUI"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-supabase-estoque",
+      "name": "Supabase — Consulta estoque",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 340]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input    = $input.first().json;\nconst from     = $('Extrai lista de códigos').first().json.from;\nconst codes    = $('Extrai lista de códigos').first().json.codes;\nconst estoque  = Array.isArray(input) ? input : [];\n\n// Preço por código\nfunction preco(code) {\n  if (!code) return 1;\n  if (code === '00' || code.startsWith('FWC')) return 2;\n  if (/^[A-Z]{2,3}1$/.test(code)) return 2;\n  return 1;\n}\n\n// Desconto por volume\nfunction precoDesconto(code, total) {\n  const base = preco(code);\n  const spec = base === 2;\n  if (total >= 200) return spec ? 1.90 : 0.90;\n  if (total >= 100) return spec ? 1.95 : 0.95;\n  return base;\n}\n\nconst estoqueMap = new Map(estoque.map(s => [s.code, s]));\n\nconst disponiveis = [];\nconst indisponiveis = [];\n\nfor (const code of codes) {\n  const s = estoqueMap.get(code);\n  if (s && s.quantity > 0) {\n    disponiveis.push({ code, qty: s.quantity, name: s.name });\n  } else {\n    indisponiveis.push(code);\n  }\n}\n\nconst totalQty = disponiveis.length; // 1 de cada pedida\n\n// Monta resposta\nconst linhasDisp = disponiveis.map(s => {\n  const p = precoDesconto(s.code, totalQty);\n  return `  ✅ ${s.code} — ${brl(p)}`;\n});\n\nconst linhasIndisp = indisponiveis.map(c => `  ❌ ${c}`);\n\nconst totalValor = disponiveis.reduce((acc, s) => acc + precoDesconto(s.code, totalQty), 0);\n\nfunction brl(v) {\n  return 'R$ ' + v.toFixed(2).replace('.', ',');\n}\n\nlet descMsg = '';\nif (totalQty >= 200) descMsg = '\\n🏷️ _Desconto de 10% aplicado (200+ figurinhas)_';\nelse if (totalQty >= 100) descMsg = '\\n🏷️ _Desconto de 5% aplicado (100+ figurinhas)_';\nelse if (totalQty >= 50) descMsg = `\\n💡 _Com 100+ figurinhas você ganha 5% de desconto_`;\n\nlet msg = '🔍 *Verificação de estoque*\\n\\n';\n\nif (disponiveis.length > 0) {\n  msg += `*Disponíveis (${disponiveis.length}):*\\n`;\n  msg += linhasDisp.join('\\n') + '\\n';\n  msg += `\\n💰 *Total: ${brl(totalValor)}*${descMsg}\\n`;\n}\n\nif (indisponiveis.length > 0) {\n  msg += `\\n*Indisponíveis (${indisponiveis.length}):*\\n`;\n  msg += linhasIndisp.join('\\n') + '\\n';\n}\n\nif (disponiveis.length > 0) {\n  msg += `\\n_Para comprar, acesse o catálogo ou responda confirmando!_ 🛒`;\n}\n\nreturn [{ json: { from, msg, totalValor, qtdDisp: disponiveis.length } }];"
+      },
+      "id": "code-monta-resposta",
+      "name": "Monta resposta de estoque",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 340]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evolutionapi.imctatui.online/message/sendText/IPC",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "SUA_API_KEY_AQUI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"55{{ $json.from }}\",\n  \"text\": {{ JSON.stringify($json.msg) }}\n}",
+        "options": {}
+      },
+      "id": "http-evolution-resposta",
+      "name": "Evolution — Responde lista",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1220, 340]
+    }
+  ],
+  "connections": {
+    "Webhook — Mensagem WhatsApp": {
+      "main": [
+        [
+          { "node": "Responde OK", "type": "main", "index": 0 },
+          { "node": "Extrai lista de códigos", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Extrai lista de códigos": {
+      "main": [
+        [{ "node": "Supabase — Consulta estoque", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase — Consulta estoque": {
+      "main": [
+        [{ "node": "Monta resposta de estoque", "type": "main", "index": 0 }]
+      ]
+    },
+    "Monta resposta de estoque": {
+      "main": [
+        [{ "node": "Evolution — Responde lista", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

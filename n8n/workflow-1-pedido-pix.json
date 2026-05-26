@@ -1,0 +1,117 @@
+{
+  "name": "Figurinhas — Pedido novo → PIX WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "figurinhas-pedido",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook — Novo Pedido",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "ok",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Responde OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [460, 180]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Dados do pedido vindos do Supabase webhook\nconst body = $input.first().json.body || $input.first().json;\nconst record = body.record || body;\n\nconst orderId      = record.id || '';\nconst buyerName    = record.buyer_name || '';\nconst buyerPhone   = (record.buyer_whatsapp || '').replace(/\\D/g, '');\nconst totalValue   = Number(record.total_value || 0);\nconst createdAt    = new Date(record.created_at || Date.now())\n                      .toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });\n\n// Desconto aplicado (já vem calculado no total_value)\n// Monta mensagem PIX\nconst pixKey   = '15991460543';\nconst pixTipo  = 'Telefone';\nconst shortId  = orderId.slice(0, 8).toUpperCase();\n\nconst msg = [\n  `🏷️ *Figurinhas Copa 2026 — Pedido Confirmado!*`,\n  ``,\n  `Olá, *${buyerName}*! Seu pedido foi recebido. 🎉`,\n  ``,\n  `📋 *Pedido:* #${shortId}`,\n  `💰 *Total: R$ ${totalValue.toFixed(2).replace('.', ',')}*`,\n  ``,\n  `━━━━━━━━━━━━━━━━━`,\n  `💳 *Pagamento via PIX*`,\n  ``,\n  `🔑 *Chave PIX (${pixTipo}):*`,\n  `\\`${pixKey}\\``,\n  ``,\n  `📌 *Como pagar:*`,\n  `1. Abra seu banco`,\n  `2. Vá em PIX → Pagar`,\n  `3. Digite a chave acima`,\n  `4. Confirme o valor *R$ ${totalValue.toFixed(2).replace('.', ',')}*`,\n  `5. Envie o comprovante aqui`,\n  `━━━━━━━━━━━━━━━━━`,\n  ``,\n  `Após confirmar o pagamento separamos suas figurinhas! 📦`,\n  `_Qualquer dúvida é só chamar._ 😊`\n].join('\\n');\n\nreturn [{ json: { buyerPhone, msg, orderId: shortId, buyerName, totalValue } }];"
+      },
+      "id": "code-monta-mensagem",
+      "name": "Monta mensagem PIX",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evolutionapi.imctatui.online/message/sendText/IPC",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "SUA_API_KEY_AQUI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"55{{ $json.buyerPhone }}\",\n  \"text\": {{ JSON.stringify($json.msg) }}\n}",
+        "options": {}
+      },
+      "id": "http-evolution-pix",
+      "name": "Evolution — Envia PIX ao cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evolutionapi.imctatui.online/message/sendText/IPC",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "SUA_API_KEY_AQUI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"5515991460543\",\n  \"text\": \"🔔 *Novo pedido #{{ $json.orderId }}*\\n\\n👤 *Cliente:* {{ $json.buyerName }}\\n📱 *WhatsApp:* {{ $json.buyerPhone }}\\n💰 *Total:* R$ {{ $json.totalValue.toFixed(2).replace('.', ',') }}\\n\\nAcesse o painel para confirmar.\"\n}",
+        "options": {}
+      },
+      "id": "http-evolution-vendedor",
+      "name": "Evolution — Avisa vendedor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 540]
+    }
+  ],
+  "connections": {
+    "Webhook — Novo Pedido": {
+      "main": [
+        [
+          { "node": "Responde OK", "type": "main", "index": 0 },
+          { "node": "Monta mensagem PIX", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Monta mensagem PIX": {
+      "main": [
+        [
+          { "node": "Evolution — Envia PIX ao cliente", "type": "main", "index": 0 },
+          { "node": "Evolution — Avisa vendedor", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
