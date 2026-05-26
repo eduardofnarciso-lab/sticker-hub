@@ -63,7 +63,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Outlet />
-        <Toaster richColors position="top-center" />
+        <Toaster richColors position="bottom-center" />
       </AuthProvider>
     </QueryClientProvider>
   );
