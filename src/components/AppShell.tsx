@@ -9,6 +9,8 @@ import {
   ShieldCheck,
   ScanLine,
   Sparkles,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +18,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
+import { useTheme } from "@/hooks/use-theme";
 
 const nav = [
   { to: "/dashboard", label: "Início",     icon: LayoutDashboard },
@@ -28,6 +31,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path     = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { theme, toggle: toggleTheme } = useTheme();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -139,6 +143,20 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {/* Rodapé sidebar */}
         <div className="p-3 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+          {/* Toggle tema */}
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm transition-all duration-200 mb-1"
+            style={{ color: "#A1A1AA" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            {theme === "dark"
+              ? <Sun className="h-4 w-4" />
+              : <Moon className="h-4 w-4" />}
+            {theme === "dark" ? "Modo claro" : "Modo noturno"}
+          </button>
+
           <button
             onClick={sharePublic}
             className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm transition-all duration-200 mb-1"
@@ -194,6 +212,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
         <div className="flex items-center gap-1">
+          <Button size="icon" variant="ghost" onClick={toggleTheme}
+            className="text-zinc-400 hover:text-white hover:bg-white/5"
+          >
+            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
           <Button size="icon" variant="ghost" onClick={sharePublic}
             className="text-zinc-400 hover:text-white hover:bg-white/5"
           >
@@ -219,7 +242,16 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           <p className="text-[11px]" style={{ color: "#71717A" }}>
             Desenvolvido por{" "}
-            <span style={{ color: "#A1A1AA" }}>SpiritRelay</span>
+            <a
+              href="https://spiritrelay.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#A78BFA", textDecoration: "none" }}
+              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
+              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+            >
+              SpiritRelay
+            </a>
             {" "}· Plataforma de Figurinhas
           </p>
         </footer>
