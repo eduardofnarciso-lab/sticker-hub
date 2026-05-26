@@ -292,50 +292,21 @@ export default function StockHistoryPage() {
           </div>
         )}
 
-        {/* SQL reminder */}
+        {/* Info: quando o histórico registra */}
         <div className="mt-6 rounded-xl p-4"
           style={{
-            background: "rgba(251,191,36,0.07)",
-            border: "1px solid rgba(251,191,36,0.15)",
+            background: "rgba(96,165,250,0.06)",
+            border: "1px solid rgba(96,165,250,0.12)",
           }}
         >
-          <p className="text-xs font-semibold mb-1" style={{ color: "#FBB124" }}>
-            ⚠️ Para ativar o histórico, execute o SQL no Supabase:
+          <p className="text-xs font-semibold mb-1" style={{ color: "#60A5FA" }}>
+            ℹ️ Quando os movimentos são registrados
           </p>
-          <pre className="text-xs whitespace-pre-wrap" style={{ color: "#A1A1AA", fontFamily: "monospace" }}>{`-- 1. Tabela de movimentos
-CREATE TABLE IF NOT EXISTS stock_movements (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id uuid REFERENCES profiles(id),
-  sticker_id uuid REFERENCES stickers(id),
-  sticker_code text,
-  type text CHECK (type IN ('importacao','venda','cancelamento','ajuste')),
-  qty_before int NOT NULL,
-  qty_change int NOT NULL,
-  qty_after int NOT NULL,
-  order_id uuid REFERENCES orders(id),
-  notes text,
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE stock_movements ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "owner" ON stock_movements FOR ALL USING (auth.uid() = user_id);
-
--- 2. Trigger de auditoria
-CREATE OR REPLACE FUNCTION log_stock_change()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF OLD.quantity <> NEW.quantity THEN
-    INSERT INTO stock_movements (user_id, sticker_id, sticker_code, type, qty_before, qty_change, qty_after)
-    VALUES (NEW.user_id, NEW.id, NEW.code,
-      CASE WHEN NEW.quantity < OLD.quantity THEN 'venda' ELSE 'ajuste' END,
-      OLD.quantity, NEW.quantity - OLD.quantity, NEW.quantity);
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER sticker_stock_audit
-AFTER UPDATE ON stickers
-FOR EACH ROW EXECUTE FUNCTION log_stock_change();`}</pre>
+          <p className="text-xs" style={{ color: "#71717A" }}>
+            O histórico registra automaticamente toda alteração de quantidade nas figurinhas —
+            quando você marca um pedido como <strong style={{ color: "#A1A1AA" }}>Separado</strong> ou <strong style={{ color: "#A1A1AA" }}>Entregue</strong> na tela de Vendas,
+            ou faz ajustes manuais no Estoque. Pedidos pendentes no catálogo não reduzem o estoque ainda (só reservam).
+          </p>
         </div>
 
       </div>
