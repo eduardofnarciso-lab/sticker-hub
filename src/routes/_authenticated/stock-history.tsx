@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -101,8 +100,7 @@ export default function StockHistoryPage() {
   });
 
   return (
-    <AppShell>
-      <div style={{ color: "#F4F4F5" }}>
+    <div style={{ color: "#F4F4F5" }}>
 
         {/* Header */}
         <div className="mb-6">
@@ -309,7 +307,6 @@ export default function StockHistoryPage() {
           </p>
         </div>
 
-      </div>
-    </AppShell>
+    </div>
   );
 }
