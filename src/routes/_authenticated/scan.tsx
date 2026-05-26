@@ -268,9 +268,12 @@ function ScanPage() {
           </p>
         </div>
 
-        {/* ── Viewfinder ── */}
+        {/* ── Viewfinder — só aparece quando câmera está ativa ── */}
         <div className="relative rounded-2xl overflow-hidden bg-black aspect-video w-full"
-          style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)" }}>
+          style={{
+            display: scanning ? "block" : "none",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
+          }}>
           <video
             ref={videoRef}
             autoPlay playsInline muted

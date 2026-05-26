@@ -823,8 +823,18 @@ function PublicCatalog() {
       <div className="h-10" />
 
       {/* Footer fixo */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-card/80 backdrop-blur border-t py-2 text-center text-[10px] text-muted-foreground/50 z-10">
-        Desenvolvido por <span className="font-semibold">SpiritRelay</span> · Empresa de Desenvolvimento
+      <footer className="fixed bottom-0 left-0 right-0 backdrop-blur border-t py-2 text-center text-[10px] z-10"
+        style={{ background: "rgba(11,16,32,0.85)", borderColor: "rgba(255,255,255,0.06)", color: "#71717A" }}>
+        Desenvolvido por{" "}
+        <a
+          href="https://spiritrelay.com.br"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#A78BFA", textDecoration: "none" }}
+        >
+          SpiritRelay
+        </a>
+        {" "}· Plataforma de Figurinhas
       </footer>
     </div>
   );
