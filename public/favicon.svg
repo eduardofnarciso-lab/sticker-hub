@@ -1,55 +1,56 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1a1040"/>
-      <stop offset="100%" stop-color="#0B1020"/>
-    </linearGradient>
-    <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#8B5CF6"/>
-      <stop offset="100%" stop-color="#60A5FA"/>
-    </linearGradient>
-    <linearGradient id="grad2" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#60A5FA"/>
+    <linearGradient id="cg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#7C3AED"/>
+      <stop offset="55%"  stop-color="#60A5FA"/>
       <stop offset="100%" stop-color="#22D3EE"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#130d2a"/>
+      <stop offset="100%" stop-color="#0B1020"/>
     </linearGradient>
   </defs>
 
-  <!-- Background rounded square -->
-  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  <!-- App icon background -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
 
-  <!-- Subtle glow border -->
-  <rect width="64" height="64" rx="16" fill="none" stroke="url(#grad)" stroke-width="1.5" stroke-opacity="0.5"/>
-
-  <!-- Sticker card shape (slightly rotated) -->
-  <g transform="translate(32,34) rotate(-8)">
-    <rect x="-14" y="-14" width="28" height="28" rx="5"
-      fill="url(#grad)" fill-opacity="0.18"
-      stroke="url(#grad)" stroke-width="1.2" stroke-opacity="0.6"/>
+  <!-- Back card — rotated +8deg, offset bottom-right -->
+  <g transform="translate(35, 35) rotate(8)">
+    <rect x="-13" y="-17" width="26" height="34" rx="6"
+      fill="rgba(96,165,250,0.06)"
+      stroke="url(#cg)" stroke-width="1.4" stroke-opacity="0.55"/>
   </g>
 
-  <!-- Bold "F" letter -->
-  <text x="19" y="43"
-    font-family="'Arial Black', 'Arial', sans-serif"
-    font-weight="900"
-    font-size="34"
-    fill="white"
-    fill-opacity="0.97">F</text>
+  <!-- Front card -->
+  <g transform="translate(30, 31)">
+    <rect x="-13" y="-17" width="26" height="34" rx="6"
+      fill="rgba(124,58,237,0.09)"
+      stroke="url(#cg)" stroke-width="1.8"/>
 
-  <!-- Large sparkle top-right -->
-  <g transform="translate(48,16)">
-    <path d="M0 -7 L1.4 -1.4 L7 0 L1.4 1.4 L0 7 L-1.4 1.4 L-7 0 L-1.4 -1.4 Z"
-      fill="url(#grad2)" fill-opacity="0.95" transform="scale(0.85)"/>
+    <!-- Diagonal shine line (bottom-left → center-right) -->
+    <line x1="-5" y1="9" x2="7" y2="-1"
+      stroke="url(#cg)" stroke-width="1.1" stroke-linecap="round" stroke-opacity="0.55"/>
+
+    <!-- Large 4-point sparkle, center of card -->
+    <path d="M0,-8.5 L1.7,-1.7 L8.5,0 L1.7,1.7 L0,8.5 L-1.7,1.7 L-8.5,0 L-1.7,-1.7 Z"
+      fill="url(#cg)" fill-opacity="0.85"/>
+
+    <!-- Small 4-point sparkle, top-left of card -->
+    <g transform="translate(-5.5,-8)">
+      <path d="M0,-3 L0.6,-0.6 L3,0 L0.6,0.6 L0,3 L-0.6,0.6 L-3,0 L-0.6,-0.6 Z"
+        fill="url(#cg)" fill-opacity="0.8"/>
+    </g>
   </g>
 
-  <!-- Small sparkle bottom-right -->
-  <g transform="translate(52,44)">
-    <path d="M0 -4 L0.8 -0.8 L4 0 L0.8 0.8 L0 4 L-0.8 0.8 L-4 0 L-0.8 -0.8 Z"
-      fill="url(#grad)" fill-opacity="0.8" transform="scale(0.75)"/>
+  <!-- Outer sparkle — top-left of card stack -->
+  <g transform="translate(14, 16)">
+    <path d="M0,-4.5 L0.9,-0.9 L4.5,0 L0.9,0.9 L0,4.5 L-0.9,0.9 L-4.5,0 L-0.9,-0.9 Z"
+      fill="url(#cg)" fill-opacity="0.9"/>
   </g>
 
-  <!-- Tiny sparkle top-left -->
-  <g transform="translate(13,14)">
-    <path d="M0 -3 L0.6 -0.6 L3 0 L0.6 0.6 L0 3 L-0.6 0.6 L-3 0 L-0.6 -0.6 Z"
-      fill="white" fill-opacity="0.35"/>
+  <!-- Outer sparkle — bottom-right -->
+  <g transform="translate(50, 48)">
+    <path d="M0,-3 L0.6,-0.6 L3,0 L0.6,0.6 L0,3 L-0.6,0.6 L-3,0 L-0.6,-0.6 Z"
+      fill="url(#cg)" fill-opacity="0.75"/>
   </g>
 </svg>

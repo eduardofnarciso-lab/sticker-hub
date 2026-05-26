@@ -7,7 +7,6 @@ import {
   Share2,
   LogOut,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import { type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,52 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
+
+/** Ícone fiel ao logo Figu: dois cards empilhados com gradiente roxo→azul→ciano e sparkles */
+function FiguLogo({ size = 28 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="fl-cg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%"   stopColor="#7C3AED"/>
+          <stop offset="55%"  stopColor="#60A5FA"/>
+          <stop offset="100%" stopColor="#22D3EE"/>
+        </linearGradient>
+      </defs>
+      {/* Back card */}
+      <g transform="translate(35,35) rotate(8)">
+        <rect x="-13" y="-17" width="26" height="34" rx="6"
+          fill="rgba(96,165,250,0.08)" stroke="url(#fl-cg)" strokeWidth="1.4" strokeOpacity="0.5"/>
+      </g>
+      {/* Front card */}
+      <g transform="translate(30,31)">
+        <rect x="-13" y="-17" width="26" height="34" rx="6"
+          fill="rgba(124,58,237,0.1)" stroke="url(#fl-cg)" strokeWidth="1.8"/>
+        {/* Diagonal shine */}
+        <line x1="-5" y1="9" x2="7" y2="-1"
+          stroke="url(#fl-cg)" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.5"/>
+        {/* Large sparkle */}
+        <path d="M0,-8.5 L1.7,-1.7 L8.5,0 L1.7,1.7 L0,8.5 L-1.7,1.7 L-8.5,0 L-1.7,-1.7 Z"
+          fill="url(#fl-cg)" fillOpacity="0.85"/>
+        {/* Small sparkle top-left */}
+        <g transform="translate(-5.5,-8)">
+          <path d="M0,-3 L0.6,-0.6 L3,0 L0.6,0.6 L0,3 L-0.6,0.6 L-3,0 L-0.6,-0.6 Z"
+            fill="url(#fl-cg)" fillOpacity="0.8"/>
+        </g>
+      </g>
+      {/* Outer sparkle top-left */}
+      <g transform="translate(14,16)">
+        <path d="M0,-4.5 L0.9,-0.9 L4.5,0 L0.9,0.9 L0,4.5 L-0.9,0.9 L-4.5,0 L-0.9,-0.9 Z"
+          fill="url(#fl-cg)" fillOpacity="0.9"/>
+      </g>
+      {/* Outer sparkle bottom-right */}
+      <g transform="translate(50,48)">
+        <path d="M0,-3 L0.6,-0.6 L3,0 L0.6,0.6 L0,3 L-0.6,0.6 L-3,0 L-0.6,-0.6 Z"
+          fill="url(#fl-cg)" fillOpacity="0.7"/>
+      </g>
+    </svg>
+  );
+}
 
 const nav = [
   { to: "/dashboard", label: "Início",     icon: LayoutDashboard },
@@ -86,9 +131,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="p-6 pb-4">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "linear-gradient(135deg, #8B5CF6, #60A5FA)" }}
+              style={{ background: "#0d0a1a" }}
             >
-              <Sparkles className="h-4 w-4 text-white" />
+              <FiguLogo size={28} />
             </div>
             <div>
               <div className="font-bold tracking-tight" style={{ color: "#FFFFFF" }}>Figu</div>
@@ -167,9 +212,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <div className="flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: "linear-gradient(135deg, #8B5CF6, #60A5FA)" }}
+            style={{ background: "#0d0a1a" }}
           >
-            <Sparkles className="h-4 w-4 text-white" />
+            <FiguLogo size={24} />
           </div>
           <div>
             <span className="font-bold text-sm" style={{ color: "#FFFFFF" }}>Figu</span>
