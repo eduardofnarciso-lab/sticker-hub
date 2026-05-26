@@ -132,7 +132,7 @@ function OrderCard({
             disabled={approving || cancelling}
           >
             <Check className="h-3.5 w-3.5" />
-            Aprovar e debitar estoque
+            Confirmar pagamento
           </Button>
           <Button
             size="sm"
