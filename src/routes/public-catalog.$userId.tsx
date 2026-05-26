@@ -364,14 +364,20 @@ function PublicCatalog() {
       const totalQty   = cart.reduce((sum, c) => sum + c.qty, 0);
       const shortId    = String(orderId).slice(0, 8).toUpperCase();
       const isTatui    = buyerCity.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "") === "tatui";
+      const linhas     = cart.map(
+        (c) => `• ${c.code} — ${c.name} × ${c.qty} = ${brl(c.qty * c.price)}`
+      );
       const msg = [
+        `#pedido ${totalQty} figurinhas`,
+        ``,
         `🏷️ *Pedido de Figurinhas Copa 2026*`,
         ``,
         `👤 *Nome:* ${buyerName.trim()}`,
         `📱 *WhatsApp:* ${buyerPhone.trim()}`,
-        `🏙️ *Cidade:* ${buyerCity.trim()}${!isTatui ? " (frete a combinar)" : ""}`,
+        `🏙️ *Cidade:* ${buyerCity.trim()}${!isTatui ? " _(frete a combinar)_" : ""}`,
         ``,
-        `📋 *Figurinhas:* #pedido ${totalQty} figurinhas`,
+        `📋 *Figurinhas:*`,
+        ...linhas,
         ``,
         `💰 *Total: ${brl(cartValue)}*`,
         ``,

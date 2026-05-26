@@ -55,7 +55,7 @@ function Dashboard() {
       const totalEmEstoque = normais + especiais;
 
       const ordersData    = orders ?? [];
-      const valorVendido  = ordersData.filter((o) => o.status === "aprovado").reduce((acc, o) => acc + Number(o.total_value), 0);
+      const valorVendido  = ordersData.filter((o) => ["aprovado","separado","entregue"].includes(o.status)).reduce((acc, o) => acc + Number(o.total_value), 0);
       const valorPendente = ordersData.filter((o) => o.status === "pendente").reduce((acc, o) => acc + Number(o.total_value), 0);
       const qtdPendentes  = ordersData.filter((o) => o.status === "pendente").length;
 
@@ -75,7 +75,7 @@ function Dashboard() {
 
   const CARDS = [
     { label: "Valor em Estoque", value: brl(data?.valorEstimado ?? 0), sub: `${data?.totalEmEstoque ?? 0} figurinhas disponíveis`, icon: Package, gradient: "linear-gradient(135deg,#8B5CF6,#60A5FA)", glow: "rgba(139,92,246,0.3)" },
-    { label: "Total Vendido", value: brl(data?.valorVendido ?? 0), sub: "pedidos aprovados", icon: BadgeDollarSign, gradient: "linear-gradient(135deg,#22D3EE,#34D399)", glow: "rgba(34,211,238,0.3)" },
+    { label: "Total Vendido", value: brl(data?.valorVendido ?? 0), sub: "aprovados + separados + entregues", icon: BadgeDollarSign, gradient: "linear-gradient(135deg,#22D3EE,#34D399)", glow: "rgba(34,211,238,0.3)" },
     { label: "Pendente", value: brl(data?.valorPendente ?? 0), sub: `${data?.qtdPendentes ?? 0} pedido${(data?.qtdPendentes ?? 0) !== 1 ? "s" : ""} aguardando`, icon: Clock, gradient: "linear-gradient(135deg,#F59E0B,#EF4444)", glow: "rgba(245,158,11,0.3)" },
     { label: "Normais", value: data?.normais ?? 0, sub: "jogadores · R$ 1,00", icon: TrendingUp, gradient: "linear-gradient(135deg,#60A5FA,#8B5CF6)", glow: "rgba(96,165,250,0.3)" },
     { label: "Escudo / FWC", value: data?.especiais ?? 0, sub: "logos e copa · R$ 2,00", icon: Trophy, gradient: "linear-gradient(135deg,#F59E0B,#60A5FA)", glow: "rgba(245,158,11,0.25)" },
