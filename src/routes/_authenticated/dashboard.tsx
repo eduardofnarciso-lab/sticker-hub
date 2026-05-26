@@ -149,4 +149,8 @@ function QuickAction({ to, icon: Icon, label, sub, gradient }: { to: string; ico
       </div>
       <div>
         <div className="text-sm font-semibold text-white">{label}</div>
-        <div className="text-[11px] mt-0.5" style={{ color: "#71717A" }
+        <div className="text-[11px] mt-0.5" style={{ color: "#71717A" }}>{sub}</div>
+      </div>
+    </Link>
+  );
+}

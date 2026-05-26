@@ -285,4 +285,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                 style={{ color: active ? "#8B5CF6" : "#71717A" }}
               >
                 <Icon className="h-5 w-5" />
-                <span>{item.label}</
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+
+    </div>
+  );
+}

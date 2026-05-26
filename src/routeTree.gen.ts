@@ -319,4 +319,33 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedContagemRoute: AuthenticatedContagemRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSalesRoute: AuthenticatedSalesRoute,
-  AuthenticatedScanRou
+  AuthenticatedScanRoute: AuthenticatedScanRoute,
+  AuthenticatedStickersRoute: AuthenticatedStickersRoute,
+  AuthenticatedStockRoute: AuthenticatedStockRoute,
+  AuthenticatedStockHistoryRoute: AuthenticatedStockHistoryRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  LoginRoute: LoginRoute,
+  PlanosRoute: PlanosRoute,
+  PublicCatalogUserIdRoute: PublicCatalogUserIdRoute,
+}
+export const routeTree = rootRouteImport
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
