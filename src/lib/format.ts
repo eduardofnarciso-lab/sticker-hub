@@ -7,20 +7,23 @@ export function stickerPrice(code: string | null | undefined): number {
 }
 
 // Faixas de desconto por volume (qtd total do carrinho)
-// 100–199 → normal 0,95 / brilhante 1,95
-// 200–300 → normal 0,90 / brilhante 1,90
+// 150–249 → normal 0,95 / brilhante 1,95
+// 250–499 → normal 0,90 / brilhante 1,90
+// 500+    → normal 0,85 / brilhante 1,85
 export function discountedPrice(code: string | null | undefined, totalQty: number): number {
   const base = stickerPrice(code);
   const special = base === 2;
-  if (totalQty >= 200) return special ? 1.90 : 0.90;
-  if (totalQty >= 100) return special ? 1.95 : 0.95;
+  if (totalQty >= 500) return special ? 1.85 : 0.85;
+  if (totalQty >= 250) return special ? 1.90 : 0.90;
+  if (totalQty >= 150) return special ? 1.95 : 0.95;
   return base;
 }
 
 // Rótulo do desconto ativo
 export function discountLabel(totalQty: number): { pct: number; label: string } | null {
-  if (totalQty >= 200) return { pct: 10, label: "200+ figurinhas — 10% de desconto" };
-  if (totalQty >= 100) return { pct: 5,  label: "100+ figurinhas — 5% de desconto" };
+  if (totalQty >= 500) return { pct: 15, label: "500+ figurinhas — 15% de desconto" };
+  if (totalQty >= 250) return { pct: 10, label: "250+ figurinhas — 10% de desconto" };
+  if (totalQty >= 150) return { pct: 5,  label: "150+ figurinhas — 5% de desconto" };
   return null;
 }
 

@@ -736,14 +736,19 @@ function PublicCatalog() {
                       </div>
                     )}
                     {/* Próxima faixa */}
-                    {cartTotal < 100 && (
+                    {cartTotal < 150 && (
                       <p className="text-[11px] text-center text-muted-foreground">
-                        Adicione mais {100 - cartTotal} figurinha{100 - cartTotal !== 1 ? "s" : ""} para ganhar 5% de desconto
+                        Mais {150 - cartTotal} figurinha{150 - cartTotal !== 1 ? "s" : ""} para ganhar 5% de desconto
                       </p>
                     )}
-                    {cartTotal >= 100 && cartTotal < 200 && (
+                    {cartTotal >= 150 && cartTotal < 250 && (
                       <p className="text-[11px] text-center text-muted-foreground">
-                        Mais {200 - cartTotal} figurinha{200 - cartTotal !== 1 ? "s" : ""} para 10% de desconto
+                        Mais {250 - cartTotal} figurinha{250 - cartTotal !== 1 ? "s" : ""} para 10% de desconto
+                      </p>
+                    )}
+                    {cartTotal >= 250 && cartTotal < 500 && (
+                      <p className="text-[11px] text-center text-muted-foreground">
+                        Mais {500 - cartTotal} figurinha{500 - cartTotal !== 1 ? "s" : ""} para 15% de desconto
                       </p>
                     )}
                     <div className="flex justify-between items-center pt-1">
