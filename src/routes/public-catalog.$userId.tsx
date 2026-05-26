@@ -108,8 +108,9 @@ function PublicCatalog() {
   const [search,    setSearch]    = useState("");
   const [cart,      setCart]      = useState<CartItem[]>([]);
   const [cartOpen,  setCartOpen]  = useState(false);
-  const [buyerName, setBuyerName] = useState("");
-  const [buyerPhone,setBuyerPhone]= useState("");
+  const [buyerName,  setBuyerName]  = useState("");
+  const [buyerPhone, setBuyerPhone] = useState("");
+  const [buyerCity,  setBuyerCity]  = useState("");
   const [sending,   setSending]   = useState(false);
   const [waUrl,     setWaUrl]     = useState<string | null>(null); // após pedido: link WhatsApp
 
@@ -333,6 +334,7 @@ function PublicCatalog() {
   const sendOrder = async () => {
     if (!buyerName.trim())  { toast.error("Digite seu nome"); return; }
     if (!buyerPhone.trim()) { toast.error("Digite seu WhatsApp"); return; }
+    if (!buyerCity.trim())  { toast.error("Digite sua cidade"); return; }
     if (cart.length === 0)  { toast.error("Carrinho vazio"); return; }
 
     setSending(true);
@@ -361,11 +363,13 @@ function PublicCatalog() {
       const sellerPhone = (seller?.whatsapp ?? SELLER_PHONE).replace(/\D/g, "");
       const totalQty   = cart.reduce((sum, c) => sum + c.qty, 0);
       const shortId    = String(orderId).slice(0, 8).toUpperCase();
+      const isTatui    = buyerCity.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "") === "tatui";
       const msg = [
         `🏷️ *Pedido de Figurinhas Copa 2026*`,
         ``,
         `👤 *Nome:* ${buyerName.trim()}`,
         `📱 *WhatsApp:* ${buyerPhone.trim()}`,
+        `🏙️ *Cidade:* ${buyerCity.trim()}${!isTatui ? " (frete a combinar)" : ""}`,
         ``,
         `📋 *Figurinhas:* #pedido ${totalQty} figurinhas`,
         ``,
@@ -375,7 +379,7 @@ function PublicCatalog() {
       ].join("\n");
 
       setWaUrl(`https://wa.me/55${sellerPhone}?text=${encodeURIComponent(msg)}`);
-      setCart([]); setCartOpen(false); setBuyerName(""); setBuyerPhone("");
+      setCart([]); setCartOpen(false); setBuyerName(""); setBuyerPhone(""); setBuyerCity("");
     } catch (e: any) {
       toast.error("Erro ao registrar pedido: " + (e?.message ?? String(e)));
     } finally {
@@ -800,6 +804,19 @@ function PublicCatalog() {
                   onChange={(e) => setBuyerPhone(e.target.value)}
                   type="tel"
                 />
+                <Input
+                  placeholder="Sua cidade *"
+                  value={buyerCity}
+                  onChange={(e) => setBuyerCity(e.target.value)}
+                />
+                {buyerCity.trim() &&
+                  buyerCity.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "") !== "tatui" && (
+                  <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 text-xs"
+                    style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", color: "#F59E0B" }}>
+                    <span className="text-base leading-none">🚚</span>
+                    <span>Entregas fora de Tatuí têm frete a combinar com o vendedor.</span>
+                  </div>
+                )}
                 <Button
                   className="w-full h-12 font-bold bg-green-600 hover:bg-green-700 gap-2 text-base"
                   onClick={sendOrder}

@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import {
   Plus, ShoppingBag, Check, X, Phone, User,
   Clock, PackageCheck, Ban, BadgeDollarSign, Receipt,
-  MessageCircle,
+  MessageCircle, Package, Truck, CheckSquare, Square,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -28,7 +28,7 @@ type Order = {
   id: string;
   buyer_name: string;
   buyer_whatsapp: string;
-  status: "pendente" | "aprovado" | "cancelado";
+  status: "pendente" | "aprovado" | "cancelado" | "separado" | "entregue";
   total_value: number;
   notes: string | null;
   created_at: string;
@@ -56,9 +56,23 @@ function statusBadge(status: string) {
         <PackageCheck className="h-3 w-3" />Aprovado
       </span>
     );
+  if (status === "separado")
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold"
+        style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA", border: "1px solid rgba(139,92,246,0.3)" }}>
+        <Package className="h-3 w-3" />Separado
+      </span>
+    );
+  if (status === "entregue")
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold"
+        style={{ background: "rgba(34,197,94,0.12)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.25)" }}>
+        <Truck className="h-3 w-3" />Entregue
+      </span>
+    );
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold"
-      style={{ background: "rgba(239,68,68,0.12)", color: "#EF4444", border: "1px solid rgba(239,68,68,0.25)" }}>
+      style={{ background: "rgba(239,68,68,0.12)", color: "#EF4444", border: "1px solid rgba(239,68,68,0.2)" }}>
       <Ban className="h-3 w-3" />Cancelado
     </span>
   );
@@ -66,16 +80,24 @@ function statusBadge(status: string) {
 
 // ─── Card de pedido ────────────────────────────────────────────────────
 function OrderCard({
-  order, onApprove, onCancel, approving, cancelling,
+  order, onApprove, onCancel, onSeparado, onEntregue, approving, cancelling, updating,
 }: {
   order: Order;
   onApprove?: () => void;
   onCancel?: () => void;
+  onSeparado?: () => void;
+  onEntregue?: () => void;
   approving?: boolean;
   cancelling?: boolean;
+  updating?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const isPending = order.status === "pendente";
+  const [checked, setChecked]   = useState<Record<string, boolean>>({});
+  const isPending   = order.status === "pendente";
+  const isAprovado  = order.status === "aprovado";
+  const isSeparado  = order.status === "separado";
+  const allChecked  = order.order_items.length > 0 &&
+    order.order_items.every((item) => checked[item.id]);
 
   return (
     <div className="rounded-2xl p-4 transition-all duration-200"
@@ -137,14 +159,38 @@ function OrderCard({
       </button>
 
       {expanded && (
-        <div className="mt-2 space-y-0.5 pl-2" style={{ borderLeft: "2px solid rgba(139,92,246,0.3)" }}>
+        <div className="mt-2 space-y-1 pl-2" style={{ borderLeft: "2px solid rgba(139,92,246,0.3)" }}>
+          {(isAprovado || isSeparado) && (
+            <p className="text-[10px] mb-1" style={{ color: "#71717A" }}>
+              Marque cada figurinha ao separar:
+            </p>
+          )}
           {order.order_items.map((item) => (
-            <div key={item.id} className="flex items-center gap-2 text-xs py-0.5">
+            <div
+              key={item.id}
+              className="flex items-center gap-2 text-xs py-0.5 cursor-pointer rounded-lg px-1 transition-all"
+              style={{ background: checked[item.id] ? "rgba(34,197,94,0.06)" : "transparent" }}
+              onClick={() => {
+                if (!isAprovado && !isSeparado) return;
+                setChecked((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
+              }}
+            >
+              {(isAprovado || isSeparado) ? (
+                checked[item.id]
+                  ? <CheckSquare className="h-4 w-4 shrink-0" style={{ color: "#22C55E" }} />
+                  : <Square className="h-4 w-4 shrink-0" style={{ color: "#71717A" }} />
+              ) : null}
               <span className="font-mono font-bold px-1.5 py-0.5 rounded text-[10px] w-14 text-center shrink-0"
-                style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA" }}>
+                style={{
+                  background: checked[item.id] ? "rgba(34,197,94,0.15)" : "rgba(139,92,246,0.15)",
+                  color: checked[item.id] ? "#22C55E" : "#A78BFA",
+                }}>
                 {item.sticker_code ?? "—"}
               </span>
-              <span className="flex-1 truncate" style={{ color: "#A1A1AA" }}>{item.sticker_name}</span>
+              <span className="flex-1 truncate" style={{
+                color: checked[item.id] ? "#71717A" : "#A1A1AA",
+                textDecoration: checked[item.id] ? "line-through" : "none",
+              }}>{item.sticker_name}</span>
               <span className="shrink-0 font-medium" style={{ color: "#E4E4E7" }}>×{item.quantity}</span>
               {item.unit_price > 0 && (
                 <span className="shrink-0" style={{ color: "#71717A" }}>{brl(item.unit_price * item.quantity)}</span>
@@ -173,6 +219,43 @@ function OrderCard({
           >
             <X className="h-3.5 w-3.5" />
             Cancelar
+          </button>
+        </div>
+      )}
+
+      {isAprovado && onSeparado && (
+        <div className="mt-3">
+          {!expanded && (
+            <p className="text-[10px] mb-2" style={{ color: "#71717A" }}>
+              Expanda os itens e marque cada figurinha separada antes de continuar.
+            </p>
+          )}
+          <button
+            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-50"
+            style={{
+              background: allChecked ? "rgba(139,92,246,0.2)" : "rgba(139,92,246,0.07)",
+              color: allChecked ? "#A78BFA" : "#6B7280",
+              border: allChecked ? "1px solid rgba(139,92,246,0.4)" : "1px solid rgba(139,92,246,0.15)",
+            }}
+            onClick={onSeparado}
+            disabled={!allChecked || updating}
+          >
+            <Package className="h-3.5 w-3.5" />
+            {allChecked ? "Marcar como Separado" : `Separe todos os itens (${Object.values(checked).filter(Boolean).length}/${order.order_items.length})`}
+          </button>
+        </div>
+      )}
+
+      {isSeparado && onEntregue && (
+        <div className="mt-3">
+          <button
+            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-50"
+            style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.3)" }}
+            onClick={onEntregue}
+            disabled={updating}
+          >
+            <Truck className="h-3.5 w-3.5" />
+            Marcar como Entregue
           </button>
         </div>
       )}
@@ -238,8 +321,27 @@ function OrdersSection({ userId }: { userId: string }) {
     onError: (e: Error) => toast.error("Erro: " + e.message),
   });
 
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status })
+        .eq("id", id)
+        .eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSuccess: (_, { status }) => {
+      const label = status === "separado" ? "Pedido marcado como separado!" : "Pedido marcado como entregue! ✅";
+      toast.success(label);
+      qc.invalidateQueries({ queryKey: ["orders", userId] });
+    },
+    onError: (e: Error) => toast.error("Erro: " + e.message),
+  });
+
   const pendentes   = orders.filter((o) => o.status === "pendente");
-  const processados = orders.filter((o) => o.status !== "pendente");
+  const aprovados   = orders.filter((o) => o.status === "aprovado");
+  const separados   = orders.filter((o) => o.status === "separado");
+  const processados = orders.filter((o) => ["cancelado", "entregue"].includes(o.status));
 
   if (isLoading) return (
     <div className="py-12 text-center text-sm" style={{ color: "#71717A" }}>
@@ -263,12 +365,12 @@ function OrdersSection({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {pendentes.length > 0 && (
         <div className="space-y-2">
           <p className="text-sm font-semibold flex items-center gap-1.5" style={{ color: "#F59E0B" }}>
             <Clock className="h-4 w-4" />
-            {pendentes.length} pedido{pendentes.length > 1 ? "s" : ""} aguardando aprovação
+            {pendentes.length} aguardando aprovação
           </p>
           {pendentes.map((order) => (
             <OrderCard
@@ -283,9 +385,43 @@ function OrdersSection({ userId }: { userId: string }) {
         </div>
       )}
 
+      {aprovados.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm font-semibold flex items-center gap-1.5" style={{ color: "#22D3EE" }}>
+            <PackageCheck className="h-4 w-4" />
+            {aprovados.length} para separar
+          </p>
+          {aprovados.map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              onSeparado={() => updateStatus.mutate({ id: order.id, status: "separado" })}
+              updating={updateStatus.isPending}
+            />
+          ))}
+        </div>
+      )}
+
+      {separados.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm font-semibold flex items-center gap-1.5" style={{ color: "#A78BFA" }}>
+            <Package className="h-4 w-4" />
+            {separados.length} separado{separados.length > 1 ? "s" : ""} — aguardando entrega
+          </p>
+          {separados.map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              onEntregue={() => updateStatus.mutate({ id: order.id, status: "entregue" })}
+              updating={updateStatus.isPending}
+            />
+          ))}
+        </div>
+      )}
+
       {processados.length > 0 && (
         <div className="space-y-2">
-          <p className="text-sm font-medium" style={{ color: "#71717A" }}>Histórico de pedidos</p>
+          <p className="text-sm font-medium" style={{ color: "#71717A" }}>Histórico</p>
           {processados.map((order) => (
             <OrderCard key={order.id} order={order} />
           ))}
