@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, MessageCircle, Sticker, Star, Bot, Zap } from "lucide-react";
+import { Check, MessageCircle, Sticker, Star, Bot, Zap, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/planos")({
   component: PlanosPage,
   head: () => ({
     meta: [
-      { title: "Planos — SpiritRelay Figurinhas" },
+      { title: "Planos — Figu · SpiritRelay" },
       { name: "description", content: "Venda suas figurinhas online com facilidade. Planos a partir de R$20/mês." },
     ],
   }),
@@ -14,7 +14,6 @@ export const Route = createFileRoute("/planos")({
 const WHATSAPP = "5515991460543";
 const WA_MSG   = encodeURIComponent("Olá! Quero saber mais sobre os planos para vender figurinhas na plataforma SpiritRelay.");
 
-// Recursos comuns a todos os planos simples
 const RECURSOS_BASE = [
   "Catálogo público com link exclusivo",
   "Pedidos recebidos via WhatsApp",
@@ -26,16 +25,10 @@ const RECURSOS_BASE = [
 ];
 
 const planos = [
-  { nome: "Starter", preco: 20,  limite: "até 500 figurinhas",   color: "blue"  },
-  { nome: "Pro",     preco: 50,  limite: "até 2.500 figurinhas", color: "green", destaque: true },
-  { nome: "Elite",   preco: 100, limite: "até 5.000 figurinhas", color: "amber" },
+  { nome: "Starter", preco: 20,  limite: "até 500 figurinhas",   accent: "#60A5FA" },
+  { nome: "Pro",     preco: 50,  limite: "até 2.500 figurinhas", accent: "#8B5CF6", destaque: true },
+  { nome: "Elite",   preco: 100, limite: "até 5.000 figurinhas", accent: "#22D3EE" },
 ];
-
-const colorMap: Record<string, { bg: string; border: string; badge: string; btn: string; check: string }> = {
-  blue:  { bg: "bg-blue-50",   border: "border-blue-200",  badge: "bg-blue-100 text-blue-700",   btn: "bg-blue-600 hover:bg-blue-700",   check: "text-blue-600"  },
-  green: { bg: "bg-green-50",  border: "border-green-300", badge: "bg-green-600 text-white",      btn: "bg-green-600 hover:bg-green-700", check: "text-green-600" },
-  amber: { bg: "bg-amber-50",  border: "border-amber-200", badge: "bg-amber-100 text-amber-700",  btn: "bg-amber-500 hover:bg-amber-600", check: "text-amber-600" },
-};
 
 const RECURSOS_ENTERPRISE = [
   "Figurinhas ilimitadas",
@@ -54,142 +47,210 @@ const RECURSOS_ENTERPRISE = [
 
 function PlanosPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white pb-16">
+    <div style={{ minHeight: "100vh", background: "#0B1020", paddingBottom: "4rem",
+      backgroundImage: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(139,92,246,0.15) 0%, transparent 60%)" }}>
 
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-20 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-green-600 flex items-center justify-center shrink-0">
-            <Sticker className="h-5 w-5 text-white" />
+      <header style={{
+        background: "rgba(11,16,32,0.95)",
+        backdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        position: "sticky", top: 0, zIndex: 20,
+      }}>
+        <div style={{ maxWidth: "1024px", margin: "0 auto", padding: "0.75rem 1rem",
+          display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <div style={{
+            height: "36px", width: "36px", borderRadius: "0.75rem",
+            background: "linear-gradient(135deg, #8B5CF6, #60A5FA)",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}>
+            <Sparkles style={{ height: "18px", width: "18px", color: "#fff" }} />
           </div>
-          <div className="flex-1">
-            <div className="font-bold text-sm">SpiritRelay — Figurinhas</div>
-            <div className="text-xs text-muted-foreground">Plataforma de venda de figurinhas</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: "0.875rem", color: "#FFFFFF" }}>Figu · SpiritRelay</div>
+            <div style={{ fontSize: "0.75rem", color: "#A1A1AA" }}>Plataforma de figurinhas</div>
           </div>
           <a
             href={`https://wa.me/${WHATSAPP}?text=${WA_MSG}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+            style={{
+              display: "flex", alignItems: "center", gap: "0.375rem",
+              background: "rgba(34,211,238,0.15)", color: "#22D3EE",
+              border: "1px solid rgba(34,211,238,0.25)",
+              fontSize: "0.75rem", fontWeight: 600,
+              padding: "0.5rem 0.875rem", borderRadius: "0.625rem",
+              textDecoration: "none",
+            }}
           >
-            <MessageCircle className="h-3.5 w-3.5" />
+            <MessageCircle style={{ height: "14px", width: "14px" }} />
             Falar conosco
           </a>
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-4 py-12 space-y-14">
+      <div style={{ maxWidth: "1024px", margin: "0 auto", padding: "3rem 1rem", display: "flex", flexDirection: "column", gap: "3.5rem" }}>
 
         {/* Hero */}
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full">
-            <Star className="h-3.5 w-3.5" />
+        <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: "0.5rem",
+            background: "rgba(139,92,246,0.12)", color: "#A78BFA",
+            border: "1px solid rgba(139,92,246,0.2)",
+            fontSize: "0.75rem", fontWeight: 600,
+            padding: "0.375rem 0.875rem", borderRadius: "999px",
+          }}>
+            <Star style={{ height: "14px", width: "14px" }} />
             Plataforma especializada em figurinhas
           </div>
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight">
+          <h1 style={{ fontSize: "clamp(1.75rem, 5vw, 2.5rem)", fontWeight: 900, color: "#FFFFFF",
+            letterSpacing: "-0.02em", lineHeight: 1.15, margin: 0 }}>
             Venda suas figurinhas<br />
-            <span className="text-green-600">de forma profissional</span>
+            <span style={{ background: "linear-gradient(135deg, #8B5CF6, #60A5FA)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              de forma profissional
+            </span>
           </h1>
-          <p className="text-muted-foreground max-w-xl mx-auto text-base">
+          <p style={{ color: "#A1A1AA", maxWidth: "520px", fontSize: "1rem", margin: 0 }}>
             Catálogo online, pedidos via WhatsApp e controle de estoque completo.
-            Planos a partir de <strong>R$20/mês</strong>.
+            Planos a partir de <strong style={{ color: "#E4E4E7" }}>R$20/mês</strong>.
           </p>
         </div>
 
-        {/* Planos simples — grid 3 colunas */}
-        <div className="space-y-4">
-          <div className="text-center">
-            <h2 className="text-2xl font-black">Planos</h2>
-            <p className="text-muted-foreground text-sm mt-1">Todos os planos incluem os mesmos recursos — só muda o limite de figurinhas.</p>
+        {/* Planos */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          <div style={{ textAlign: "center" }}>
+            <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "#FFFFFF", margin: 0 }}>Planos</h2>
+            <p style={{ color: "#A1A1AA", fontSize: "0.875rem", marginTop: "0.25rem" }}>
+              Todos incluem os mesmos recursos — só muda o limite de figurinhas.
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {planos.map((plano) => {
-              const c = colorMap[plano.color];
-              return (
-                <div
-                  key={plano.nome}
-                  className={`relative rounded-2xl border-2 p-6 flex flex-col gap-5 shadow-sm ${c.bg} ${c.border} ${
-                    plano.destaque ? "shadow-lg scale-[1.02]" : ""
-                  }`}
-                >
-                  {plano.destaque && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <span className="bg-green-600 text-white text-[11px] font-bold px-3 py-1 rounded-full shadow">
-                        ⭐ Mais popular
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="space-y-1">
-                    <div className="font-bold text-xl">{plano.nome}</div>
-                    <div className={`text-xs font-semibold px-2 py-0.5 rounded-full w-fit ${c.badge}`}>
-                      {plano.limite}
-                    </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.25rem" }}>
+            {planos.map((plano) => (
+              <div key={plano.nome}
+                style={{
+                  position: "relative",
+                  borderRadius: "1.25rem",
+                  padding: "1.5rem",
+                  background: plano.destaque ? "rgba(139,92,246,0.1)" : "rgba(21,27,46,0.6)",
+                  backdropFilter: "blur(16px)",
+                  border: `1px solid ${plano.destaque ? "rgba(139,92,246,0.3)" : "rgba(255,255,255,0.07)"}`,
+                  boxShadow: plano.destaque ? "0 0 32px rgba(139,92,246,0.15)" : "none",
+                  display: "flex", flexDirection: "column", gap: "1.25rem",
+                  transform: plano.destaque ? "scale(1.02)" : "scale(1)",
+                }}
+              >
+                {plano.destaque && (
+                  <div style={{ position: "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)" }}>
+                    <span style={{
+                      background: "linear-gradient(135deg, #8B5CF6, #60A5FA)",
+                      color: "#fff", fontSize: "0.6875rem", fontWeight: 700,
+                      padding: "0.25rem 0.875rem", borderRadius: "999px",
+                      boxShadow: "0 0 16px rgba(139,92,246,0.4)",
+                    }}>
+                      ⭐ Mais popular
+                    </span>
                   </div>
+                )}
 
-                  <div className="flex items-end gap-1">
-                    <span className="text-4xl font-black">R${plano.preco}</span>
-                    <span className="text-muted-foreground text-sm mb-1">/mês</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+                  <div style={{ fontWeight: 700, fontSize: "1.25rem", color: "#FFFFFF" }}>{plano.nome}</div>
+                  <div style={{
+                    display: "inline-flex", fontSize: "0.75rem", fontWeight: 600,
+                    padding: "0.2rem 0.625rem", borderRadius: "999px", width: "fit-content",
+                    background: `${plano.accent}18`, color: plano.accent,
+                    border: `1px solid ${plano.accent}33`,
+                  }}>
+                    {plano.limite}
                   </div>
-
-                  <ul className="space-y-2 flex-1">
-                    {RECURSOS_BASE.map((r) => (
-                      <li key={r} className="flex items-start gap-2 text-sm">
-                        <Check className={`h-4 w-4 shrink-0 mt-0.5 ${c.check}`} />
-                        <span>{r}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <a
-                    href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
-                      `Olá! Quero contratar o plano ${plano.nome} (R$${plano.preco}/mês) da SpiritRelay.`
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`flex items-center justify-center gap-2 text-white font-bold py-3 rounded-xl transition-colors ${c.btn}`}
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Quero este plano
-                  </a>
                 </div>
-              );
-            })}
+
+                <div style={{ display: "flex", alignItems: "flex-end", gap: "0.25rem" }}>
+                  <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#FFFFFF", lineHeight: 1 }}>
+                    R${plano.preco}
+                  </span>
+                  <span style={{ color: "#71717A", fontSize: "0.875rem", marginBottom: "0.25rem" }}>/mês</span>
+                </div>
+
+                <ul style={{ display: "flex", flexDirection: "column", gap: "0.625rem", flex: 1, margin: 0, padding: 0, listStyle: "none" }}>
+                  {RECURSOS_BASE.map((r) => (
+                    <li key={r} style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", fontSize: "0.875rem" }}>
+                      <Check style={{ height: "16px", width: "16px", color: plano.accent, flexShrink: 0, marginTop: "2px" }} />
+                      <span style={{ color: "#D4D4D8" }}>{r}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <a
+                  href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
+                    `Olá! Quero contratar o plano ${plano.nome} (R$${plano.preco}/mês) da SpiritRelay.`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+                    color: "#fff", fontWeight: 700, padding: "0.875rem", borderRadius: "0.875rem",
+                    background: `linear-gradient(135deg, ${plano.accent}, ${plano.destaque ? "#60A5FA" : plano.accent}cc)`,
+                    textDecoration: "none",
+                    boxShadow: `0 0 20px ${plano.accent}33`,
+                  }}
+                >
+                  <MessageCircle style={{ height: "16px", width: "16px" }} />
+                  Quero este plano
+                </a>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Plano Enterprise — card especial full width */}
-        <div className="relative rounded-3xl border-2 border-slate-800 bg-slate-900 text-white p-8 md:p-10 shadow-2xl overflow-hidden">
-          {/* Fundo decorativo */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl" />
+        {/* Enterprise */}
+        <div style={{
+          position: "relative", borderRadius: "1.5rem", overflow: "hidden",
+          background: "rgba(21,27,46,0.8)", backdropFilter: "blur(20px)",
+          border: "1px solid rgba(139,92,246,0.2)",
+          boxShadow: "0 0 60px rgba(139,92,246,0.1)",
+          padding: "2.5rem",
+        }}>
+          {/* Glow decorativo */}
+          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: "-64px", right: "-64px", width: "256px", height: "256px",
+              background: "rgba(139,92,246,0.12)", borderRadius: "50%", filter: "blur(60px)" }} />
+            <div style={{ position: "absolute", bottom: "-64px", left: "-64px", width: "192px", height: "192px",
+              background: "rgba(96,165,250,0.1)", borderRadius: "50%", filter: "blur(60px)" }} />
           </div>
 
-          <div className="relative z-10 grid md:grid-cols-2 gap-10">
+          <div style={{ position: "relative", zIndex: 1, display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "2.5rem" }}>
             {/* Lado esquerdo */}
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 bg-purple-500/20 border border-purple-400/30 text-purple-300 text-xs font-bold px-3 py-1.5 rounded-full">
-                  <Zap className="h-3.5 w-3.5" />
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.5rem",
+                  background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.25)",
+                  color: "#A78BFA", fontSize: "0.75rem", fontWeight: 700,
+                  padding: "0.375rem 0.75rem", borderRadius: "999px", width: "fit-content",
+                }}>
+                  <Zap style={{ height: "14px", width: "14px" }} />
                   Automação completa
                 </div>
-                <div className="flex items-center gap-3">
-                  <Bot className="h-8 w-8 text-purple-400" />
-                  <h2 className="text-3xl font-black">Enterprise</h2>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <Bot style={{ height: "32px", width: "32px", color: "#A78BFA" }} />
+                  <h2 style={{ fontSize: "1.875rem", fontWeight: 900, color: "#FFFFFF", margin: 0 }}>Enterprise</h2>
                 </div>
-                <p className="text-slate-400 text-sm">
+                <p style={{ color: "#A1A1AA", fontSize: "0.875rem", margin: 0 }}>
                   Para quem vende em alto volume e quer o fluxo 100% automatizado — do pedido ao PIX, sem intervenção manual.
                 </p>
               </div>
 
               <div>
-                <div className="flex items-end gap-1">
-                  <span className="text-5xl font-black">R$1.000</span>
-                  <span className="text-slate-400 text-sm mb-1.5">/mês</span>
+                <div style={{ display: "flex", alignItems: "flex-end", gap: "0.25rem" }}>
+                  <span style={{ fontSize: "3rem", fontWeight: 900, color: "#FFFFFF", lineHeight: 1 }}>R$1.000</span>
+                  <span style={{ color: "#71717A", fontSize: "0.875rem", marginBottom: "0.375rem" }}>/mês</span>
                 </div>
-                <div className="text-slate-400 text-xs mt-1">Figurinhas ilimitadas · Implantação inclusa</div>
+                <div style={{ color: "#71717A", fontSize: "0.75rem", marginTop: "0.25rem" }}>
+                  Figurinhas ilimitadas · Implantação inclusa
+                </div>
               </div>
 
               <a
@@ -198,23 +259,37 @@ function PlanosPage() {
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-white text-slate-900 font-bold px-6 py-3.5 rounded-xl hover:bg-slate-100 transition-colors shadow-lg text-sm"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.5rem",
+                  background: "linear-gradient(135deg, #8B5CF6, #60A5FA)",
+                  color: "#fff", fontWeight: 700,
+                  padding: "0.875rem 1.5rem", borderRadius: "0.875rem",
+                  textDecoration: "none", width: "fit-content",
+                  boxShadow: "0 0 24px rgba(139,92,246,0.4)",
+                }}
               >
-                <MessageCircle className="h-4 w-4 text-green-600" />
+                <MessageCircle style={{ height: "16px", width: "16px" }} />
                 Falar com especialista
               </a>
             </div>
 
-            {/* Lado direito — recursos */}
-            <div className="space-y-3">
-              <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">O que está incluído</p>
-              <ul className="space-y-2.5">
+            {/* Recursos */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <p style={{ color: "#71717A", fontSize: "0.75rem", fontWeight: 600,
+                textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>
+                O que está incluído
+              </p>
+              <ul style={{ display: "flex", flexDirection: "column", gap: "0.625rem", margin: 0, padding: 0, listStyle: "none" }}>
                 {RECURSOS_ENTERPRISE.map((r) => (
-                  <li key={r} className="flex items-start gap-2.5 text-sm">
-                    <div className="h-5 w-5 rounded-full bg-purple-500/20 border border-purple-400/30 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-purple-400" />
+                  <li key={r} style={{ display: "flex", alignItems: "flex-start", gap: "0.625rem", fontSize: "0.875rem" }}>
+                    <div style={{
+                      height: "20px", width: "20px", borderRadius: "50%",
+                      background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)",
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px",
+                    }}>
+                      <Check style={{ height: "12px", width: "12px", color: "#A78BFA" }} />
                     </div>
-                    <span className="text-slate-200">{r}</span>
+                    <span style={{ color: "#D4D4D8" }}>{r}</span>
                   </li>
                 ))}
               </ul>
@@ -223,26 +298,49 @@ function PlanosPage() {
         </div>
 
         {/* CTA final */}
-        <div className="bg-green-600 rounded-2xl p-8 text-center text-white space-y-4">
-          <h2 className="text-2xl font-black">Pronto para começar?</h2>
-          <p className="text-green-100 text-sm max-w-md mx-auto">
+        <div style={{
+          borderRadius: "1.5rem", padding: "2.5rem", textAlign: "center",
+          background: "rgba(139,92,246,0.12)",
+          border: "1px solid rgba(139,92,246,0.2)",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem",
+        }}>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "#FFFFFF", margin: 0 }}>Pronto para começar?</h2>
+          <p style={{ color: "#A1A1AA", fontSize: "0.875rem", maxWidth: "400px", margin: 0 }}>
             Entre em contato agora e tenha sua loja de figurinhas funcionando hoje mesmo.
           </p>
           <a
             href={`https://wa.me/${WHATSAPP}?text=${WA_MSG}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-white text-green-700 font-bold px-6 py-3 rounded-xl hover:bg-green-50 transition-colors shadow"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "0.5rem",
+              background: "linear-gradient(135deg, #8B5CF6, #60A5FA)",
+              color: "#fff", fontWeight: 700,
+              padding: "0.875rem 1.75rem", borderRadius: "0.875rem",
+              textDecoration: "none", fontSize: "0.9375rem",
+              boxShadow: "0 0 24px rgba(139,92,246,0.35)",
+            }}
           >
-            <MessageCircle className="h-5 w-5" />
+            <MessageCircle style={{ height: "20px", width: "20px" }} />
             Falar com a SpiritRelay no WhatsApp
           </a>
         </div>
       </div>
 
-      {/* Footer fixo */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur border-t py-2 text-center text-[10px] text-muted-foreground/50 z-10">
-        Desenvolvido por <span className="font-semibold">SpiritRelay</span> · Empresa de Desenvolvimento
+      {/* Footer */}
+      <footer style={{
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        background: "rgba(11,16,32,0.9)", backdropFilter: "blur(16px)",
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+        padding: "0.5rem 1rem", textAlign: "center",
+        fontSize: "0.625rem", color: "#52525B", zIndex: 10,
+      }}>
+        Desenvolvido por{" "}
+        <a href="https://spiritrelay.com.br" target="_blank" rel="noopener noreferrer"
+          style={{ color: "#A78BFA", textDecoration: "none" }}>
+          SpiritRelay
+        </a>
+        {" "}· Plataforma de Figurinhas
       </footer>
     </div>
   );

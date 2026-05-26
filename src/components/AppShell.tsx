@@ -7,10 +7,7 @@ import {
   Share2,
   LogOut,
   ShieldCheck,
-  ScanLine,
   Sparkles,
-  Sun,
-  Moon,
 } from "lucide-react";
 import { type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -18,7 +15,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import { useTheme } from "@/hooks/use-theme";
 
 const nav = [
   { to: "/dashboard", label: "Início",     icon: LayoutDashboard },
@@ -31,25 +27,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path     = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { theme, toggle: toggleTheme } = useTheme();
-  const D = theme === "dark"; // dark mode flag
-
-  // Paleta dinâmica
-  const colors = {
-    pageBg:      D ? "#0B1020"                    : "#F0F0F6",
-    sidebarBg:   D ? "rgba(11,16,32,0.97)"        : "rgba(255,255,255,0.97)",
-    sidebarBorder: D ? "rgba(255,255,255,0.06)"   : "rgba(0,0,0,0.08)",
-    headerBg:    D ? "rgba(11,16,32,0.88)"        : "rgba(255,255,255,0.88)",
-    headerBorder: D ? "rgba(255,255,255,0.06)"    : "rgba(0,0,0,0.08)",
-    navBg:       D ? "rgba(11,16,32,0.94)"        : "rgba(255,255,255,0.94)",
-    navBorder:   D ? "rgba(255,255,255,0.06)"     : "rgba(0,0,0,0.08)",
-    text:        D ? "#FFFFFF"                    : "#0B1020",
-    textMuted:   D ? "#A1A1AA"                    : "#6B7280",
-    textFaint:   D ? "#71717A"                    : "#9CA3AF",
-    userBg:      D ? "rgba(255,255,255,0.03)"     : "rgba(0,0,0,0.04)",
-    footerBorder: D ? "rgba(255,255,255,0.04)"    : "rgba(0,0,0,0.06)",
-    hoverBg:     D ? "rgba(255,255,255,0.04)"     : "rgba(0,0,0,0.04)",
-  };
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -90,19 +67,19 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const navItemStyle = (active: boolean) => ({
     background: active ? "rgba(139,92,246,0.15)" : "transparent",
-    color: active ? "#8B5CF6" : colors.textMuted,
+    color: active ? "#8B5CF6" : "#A1A1AA",
     border: active ? "1px solid rgba(139,92,246,0.2)" : "1px solid transparent",
   });
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row" style={{ background: colors.pageBg }}>
+    <div className="min-h-screen flex flex-col md:flex-row" style={{ background: "#0B1020" }}>
 
       {/* ── Desktop sidebar ── */}
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r"
         style={{
-          background: colors.sidebarBg,
+          background: "rgba(11,16,32,0.97)",
           backdropFilter: "blur(20px)",
-          borderColor: colors.sidebarBorder,
+          borderColor: "rgba(255,255,255,0.06)",
         }}
       >
         {/* Logo */}
@@ -114,8 +91,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Sparkles className="h-4 w-4 text-white" />
             </div>
             <div>
-              <div className="font-bold tracking-tight" style={{ color: colors.text }}>Figu</div>
-              <div className="text-[10px]" style={{ color: colors.textMuted }}>Copa 2026</div>
+              <div className="font-bold tracking-tight" style={{ color: "#FFFFFF" }}>Figu</div>
+              <div className="text-[10px]" style={{ color: "#A1A1AA" }}>Copa 2026</div>
             </div>
           </div>
         </div>
@@ -141,41 +118,15 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
-
-          {/* Scan */}
-          <Link
-            to="/scan"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mt-1"
-            style={navItemStyle(path.startsWith("/scan"))}
-          >
-            <ScanLine className="h-4 w-4 shrink-0" />
-            Scan / Câmera
-            {path.startsWith("/scan") && (
-              <span className="ml-auto h-1.5 w-1.5 rounded-full"
-                style={{ background: "#8B5CF6", boxShadow: "0 0 6px #8B5CF6" }} />
-            )}
-          </Link>
         </nav>
 
         {/* Rodapé sidebar */}
-        <div className="p-3 border-t" style={{ borderColor: colors.sidebarBorder }}>
-          {/* Toggle tema */}
-          <button
-            onClick={toggleTheme}
-            className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm transition-all duration-200 mb-1"
-            style={{ color: colors.textMuted, background: "transparent" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = colors.hoverBg)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-          >
-            {D ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            {D ? "Modo claro" : "Modo noturno"}
-          </button>
-
+        <div className="p-3 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
           <button
             onClick={sharePublic}
             className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm transition-all duration-200 mb-1"
-            style={{ color: colors.textMuted, background: "transparent" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = colors.hoverBg)}
+            style={{ color: "#A1A1AA", background: "transparent" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
           >
             <Share2 className="h-4 w-4" />
@@ -184,20 +135,20 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           {/* Usuário */}
           <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl"
-            style={{ background: colors.userBg }}
+            style={{ background: "rgba(255,255,255,0.03)" }}
           >
             <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
               style={{ background: "linear-gradient(135deg, #8B5CF6, #60A5FA)", color: "#fff" }}
             >
               {displayName.charAt(0).toUpperCase()}
             </div>
-            <span className="text-xs font-medium truncate flex-1" style={{ color: colors.text }}>
+            <span className="text-xs font-medium truncate flex-1" style={{ color: "#FFFFFF" }}>
               {displayName}
             </span>
             <button onClick={handleSignOut} title="Sair" className="transition-colors"
-              style={{ color: colors.textFaint }}
+              style={{ color: "#71717A" }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "#EF4444")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = colors.textFaint)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#71717A")}
             >
               <LogOut className="h-4 w-4" />
             </button>
@@ -208,10 +159,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* ── Mobile top bar ── */}
       <header className="md:hidden sticky top-0 z-30 px-4 h-14 flex items-center justify-between"
         style={{
-          background: colors.headerBg,
+          background: "rgba(11,16,32,0.88)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          borderBottom: `1px solid ${colors.headerBorder}`,
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}
       >
         <div className="flex items-center gap-2.5">
@@ -221,24 +172,18 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Sparkles className="h-4 w-4 text-white" />
           </div>
           <div>
-            <span className="font-bold text-sm" style={{ color: colors.text }}>Figu</span>
-            <span className="text-[10px] ml-1.5" style={{ color: colors.textMuted }}>Copa 2026</span>
+            <span className="font-bold text-sm" style={{ color: "#FFFFFF" }}>Figu</span>
+            <span className="text-[10px] ml-1.5" style={{ color: "#A1A1AA" }}>Copa 2026</span>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <Button size="icon" variant="ghost" onClick={toggleTheme}
-            style={{ color: colors.textMuted }}
-          >
-            {D ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </Button>
           <Button size="icon" variant="ghost" onClick={sharePublic}
-            style={{ color: colors.textMuted }}
+            className="text-zinc-400 hover:text-white hover:bg-white/5"
           >
             <Share2 className="h-5 w-5" />
           </Button>
           <Button size="icon" variant="ghost" onClick={handleSignOut}
-            className="hover:text-red-400"
-            style={{ color: colors.textMuted }}
+            className="text-zinc-400 hover:text-red-400 hover:bg-red-500/5"
           >
             <LogOut className="h-5 w-5" />
           </Button>
@@ -253,9 +198,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {/* Footer */}
         <footer className="py-3 px-4 text-center"
-          style={{ borderTop: `1px solid ${colors.footerBorder}` }}
+          style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}
         >
-          <p className="text-[11px]" style={{ color: colors.textFaint }}>
+          <p className="text-[11px]" style={{ color: "#71717A" }}>
             Desenvolvido por{" "}
             <a
               href="https://spiritrelay.com.br"
@@ -275,58 +220,22 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* ── Mobile bottom nav ── */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-30"
         style={{
-          background: colors.navBg,
+          background: "rgba(11,16,32,0.94)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          borderTop: `1px solid ${colors.navBorder}`,
+          borderTop: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        <div className="flex items-end">
-          {navItems.slice(0, 2).map((item) => {
+        <div className="flex">
+          {navItems.map((item) => {
             const active = path.startsWith(item.to);
             const Icon   = item.icon;
             return (
               <Link
                 key={item.to}
                 to={item.to}
-                className="flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium flex-1 transition-all"
-                style={{ color: active ? "#8B5CF6" : colors.textFaint }}
-              >
-                <Icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-
-          {/* Botão Scan central */}
-          <div className="flex flex-col items-center flex-shrink-0 px-2 pb-1">
-            <Link
-              to="/scan"
-              className="flex items-center justify-center -mt-5 h-14 w-14 rounded-full transition-all active:scale-95"
-              style={{
-                background: "linear-gradient(135deg, #8B5CF6, #60A5FA)",
-                boxShadow: "0 0 20px rgba(139,92,246,0.4), 0 4px 12px rgba(0,0,0,0.4)",
-                color: "#fff",
-              }}
-            >
-              <ScanLine className="h-6 w-6" />
-            </Link>
-            <span className="text-[10px] font-medium mt-1"
-              style={{ color: path.startsWith("/scan") ? "#8B5CF6" : colors.textFaint }}
-            >
-              Scan
-            </span>
-          </div>
-
-          {navItems.slice(2).map((item) => {
-            const active = path.startsWith(item.to);
-            const Icon   = item.icon;
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className="flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium flex-1 transition-all"
-                style={{ color: active ? "#8B5CF6" : colors.textFaint }}
+                className="flex flex-col items-center justify-center gap-0.5 py-3 text-[10px] font-medium flex-1 transition-all"
+                style={{ color: active ? "#8B5CF6" : "#71717A" }}
               >
                 <Icon className="h-5 w-5" />
                 <span>{item.label}</span>
