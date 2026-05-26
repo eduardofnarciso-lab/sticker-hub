@@ -308,6 +308,28 @@ function PublicCatalog() {
     if (!buyerPhone.trim()) { toast.error("Digite seu WhatsApp"); return; }
     if (cart.length === 0)  { toast.error("Carrinho vazio"); return; }
 
+    // ⚠️ Abre a janela ANTES do await — mobile bloqueia window.open() após operações assíncronas
+    const sellerPhone = (seller?.whatsapp ?? SELLER_PHONE).replace(/\D/g, "");
+    const linhas = cart.map(
+      (c) => `• ${fmtCode(c.code)} — ${fmtName(c.name)} × ${c.qty} = ${brl(c.qty * c.price)}`
+    );
+    const msgBase = [
+      `🏷️ *Pedido de Figurinhas Copa 2026*`,
+      ``,
+      `👤 *Nome:* ${buyerName.trim()}`,
+      `📱 *WhatsApp:* ${buyerPhone.trim()}`,
+      ``,
+      `📋 *Figurinhas:*`,
+      ...linhas,
+      ``,
+      `💰 *Total: ${brl(cartValue)}*`,
+    ].join("\n");
+
+    const waWindow = window.open(
+      `https://wa.me/55${sellerPhone}?text=${encodeURIComponent(msgBase)}`,
+      "_blank"
+    );
+
     setSending(true);
     try {
       const { data: orderId, error } = await (supabase as any).rpc("place_order", {
@@ -325,37 +347,24 @@ function PublicCatalog() {
       });
       if (error) throw error;
 
-      // Libera reservas temporárias (pedido já registrado no banco)
+      // Se a janela ainda estiver aberta, atualiza com o ID do pedido
+      const msgFinal = msgBase + `\n\n🆔 Pedido: #${String(orderId).slice(0, 8).toUpperCase()}`;
+      if (waWindow && !waWindow.closed) {
+        try {
+          waWindow.location.href = `https://wa.me/55${sellerPhone}?text=${encodeURIComponent(msgFinal)}`;
+        } catch (_) { /* cross-origin — janela já foi para o WhatsApp, tudo certo */ }
+      }
+
       await dbReleaseAll(sessionId);
       qc.invalidateQueries({ queryKey: ["cart-reservations"] });
       qc.invalidateQueries({ queryKey: ["public-stickers", userId] });
 
-      // Monta mensagem WhatsApp
-      const sellerPhone = (seller?.whatsapp ?? SELLER_PHONE).replace(/\D/g, "");
-      const linhas = cart.map(
-        (c) => `• ${fmtCode(c.code)} — ${fmtName(c.name)} × ${c.qty} = ${brl(c.qty * c.price)}`
-      );
-      const msg = [
-        `🏷️ *Pedido de Figurinhas Copa 2026*`,
-        ``,
-        `👤 *Nome:* ${buyerName}`,
-        `📱 *WhatsApp:* ${buyerPhone}`,
-        ``,
-        `📋 *Figurinhas:*`,
-        ...linhas,
-        ``,
-        `💰 *Total: ${brl(cartValue)}*`,
-        ``,
-        `🆔 Pedido: #${String(orderId).slice(0, 8).toUpperCase()}`,
-      ].join("\n");
-
-      const waUrl = `https://wa.me/55${sellerPhone}?text=${encodeURIComponent(msg)}`;
-      window.open(waUrl, "_blank");
-      toast.success("Pedido registrado! Abrindo WhatsApp...");
+      toast.success("Pedido registrado! WhatsApp aberto.");
       clearAllTimers();
       setCart([]); setCartOpen(false); setBuyerName(""); setBuyerPhone("");
     } catch (e: any) {
-      toast.error("Erro ao enviar: " + (e?.message ?? String(e)));
+      // Se o banco falhou mas o WhatsApp já abriu, avisa mas não bloqueia
+      toast.error("Pedido enviado, mas houve um erro ao registrar: " + (e?.message ?? String(e)));
     } finally {
       setSending(false);
     }
