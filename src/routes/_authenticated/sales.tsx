@@ -161,9 +161,22 @@ function OrderCard({
       {expanded && (
         <div className="mt-2 space-y-1 pl-2" style={{ borderLeft: "2px solid rgba(139,92,246,0.3)" }}>
           {(isAprovado || isSeparado) && (
-            <p className="text-[10px] mb-1" style={{ color: "#71717A" }}>
-              Marque cada figurinha ao separar:
-            </p>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[10px]" style={{ color: "#71717A" }}>
+                Marque cada figurinha ao separar:
+              </p>
+              <button
+                className="text-[10px] font-semibold px-2 py-0.5 rounded-lg transition-all"
+                style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA" }}
+                onClick={() => {
+                  const all: Record<string, boolean> = {};
+                  order.order_items.forEach((item) => { all[item.id] = true; });
+                  setChecked(all);
+                }}
+              >
+                Marcar tudo ✓
+              </button>
+            </div>
           )}
           {order.order_items.map((item) => (
             <div
