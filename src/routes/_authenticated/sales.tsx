@@ -9,10 +9,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -45,10 +43,25 @@ type Order = {
 
 function statusBadge(status: string) {
   if (status === "pendente")
-    return <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50 gap-1"><Clock className="h-3 w-3" />Pendente</Badge>;
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold"
+        style={{ background: "rgba(245,158,11,0.15)", color: "#F59E0B", border: "1px solid rgba(245,158,11,0.25)" }}>
+        <Clock className="h-3 w-3" />Pendente
+      </span>
+    );
   if (status === "aprovado")
-    return <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50 gap-1"><PackageCheck className="h-3 w-3" />Aprovado</Badge>;
-  return <Badge variant="outline" className="text-red-600 border-red-300 bg-red-50 gap-1"><Ban className="h-3 w-3" />Cancelado</Badge>;
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold"
+        style={{ background: "rgba(34,211,238,0.12)", color: "#22D3EE", border: "1px solid rgba(34,211,238,0.25)" }}>
+        <PackageCheck className="h-3 w-3" />Aprovado
+      </span>
+    );
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold"
+      style={{ background: "rgba(239,68,68,0.12)", color: "#EF4444", border: "1px solid rgba(239,68,68,0.25)" }}>
+      <Ban className="h-3 w-3" />Cancelado
+    </span>
+  );
 }
 
 // ─── Card de pedido ────────────────────────────────────────────────────
@@ -65,19 +78,30 @@ function OrderCard({
   const isPending = order.status === "pendente";
 
   return (
-    <Card className={`p-3 shadow-sm transition-colors ${isPending ? "border-amber-200 bg-amber-50/30" : ""}`}>
+    <div className="rounded-2xl p-4 transition-all duration-200"
+      style={{
+        background: isPending
+          ? "rgba(245,158,11,0.06)"
+          : "rgba(21,27,46,0.6)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        border: isPending
+          ? "1px solid rgba(245,158,11,0.2)"
+          : "1px solid rgba(255,255,255,0.07)",
+      }}
+    >
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             {statusBadge(order.status)}
-            <span className="text-[11px] text-muted-foreground font-mono">
+            <span className="text-[11px] font-mono" style={{ color: "#71717A" }}>
               #{order.id.slice(0, 8).toUpperCase()}
             </span>
-            <span className="text-[11px] text-muted-foreground ml-auto">{fmtDate(order.created_at)}</span>
+            <span className="text-[11px] ml-auto" style={{ color: "#71717A" }}>{fmtDate(order.created_at)}</span>
           </div>
           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-            <span className="flex items-center gap-1 text-sm font-medium">
-              <User className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="flex items-center gap-1 text-sm font-medium" style={{ color: "#E4E4E7" }}>
+              <User className="h-3.5 w-3.5" style={{ color: "#71717A" }} />
               {order.buyer_name}
             </span>
             {order.buyer_whatsapp && (
@@ -85,7 +109,8 @@ function OrderCard({
                 href={`https://wa.me/55${order.buyer_whatsapp}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-green-700 hover:underline"
+                className="flex items-center gap-1 text-xs hover:underline transition-colors"
+                style={{ color: "#22D3EE" }}
               >
                 <Phone className="h-3 w-3" />
                 {order.buyer_whatsapp}
@@ -94,29 +119,35 @@ function OrderCard({
           </div>
         </div>
         {order.total_value > 0 && (
-          <div className="text-right shrink-0 font-semibold text-sm">{brl(order.total_value)}</div>
+          <div className="text-right shrink-0 font-bold text-sm" style={{ color: "#22D3EE" }}>
+            {brl(order.total_value)}
+          </div>
         )}
       </div>
 
       {/* Itens */}
       <button className="w-full text-left mt-2" onClick={() => setExpanded((v) => !v)}>
-        <div className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-          {order.order_items.length} figurinha{order.order_items.length !== 1 ? "s" : ""}
+        <div className="text-xs transition-colors" style={{ color: "#71717A" }}>
+          {(() => {
+            const totalQty = order.order_items.reduce((sum, item) => sum + item.quantity, 0);
+            return `${totalQty} figurinha${totalQty !== 1 ? "s" : ""}`;
+          })()}
           {" — "}{expanded ? "ocultar ▲" : "ver itens ▼"}
         </div>
       </button>
 
       {expanded && (
-        <div className="mt-2 space-y-0.5 pl-2 border-l-2 border-muted">
+        <div className="mt-2 space-y-0.5 pl-2" style={{ borderLeft: "2px solid rgba(139,92,246,0.3)" }}>
           {order.order_items.map((item) => (
             <div key={item.id} className="flex items-center gap-2 text-xs py-0.5">
-              <span className="font-mono font-bold bg-muted px-1.5 py-0.5 rounded text-[10px] w-14 text-center shrink-0">
+              <span className="font-mono font-bold px-1.5 py-0.5 rounded text-[10px] w-14 text-center shrink-0"
+                style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA" }}>
                 {item.sticker_code ?? "—"}
               </span>
-              <span className="flex-1 truncate text-muted-foreground">{item.sticker_name}</span>
-              <span className="shrink-0 font-medium">×{item.quantity}</span>
+              <span className="flex-1 truncate" style={{ color: "#A1A1AA" }}>{item.sticker_name}</span>
+              <span className="shrink-0 font-medium" style={{ color: "#E4E4E7" }}>×{item.quantity}</span>
               {item.unit_price > 0 && (
-                <span className="shrink-0 text-muted-foreground">{brl(item.unit_price * item.quantity)}</span>
+                <span className="shrink-0" style={{ color: "#71717A" }}>{brl(item.unit_price * item.quantity)}</span>
               )}
             </div>
           ))}
@@ -125,25 +156,24 @@ function OrderCard({
 
       {isPending && onApprove && onCancel && (
         <div className="flex gap-2 mt-3">
-          <Button
-            size="sm"
-            className="flex-1 bg-green-600 hover:bg-green-700 gap-1.5"
+          <button
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-50"
+            style={{ background: "rgba(34,211,238,0.15)", color: "#22D3EE", border: "1px solid rgba(34,211,238,0.25)" }}
             onClick={onApprove}
             disabled={approving || cancelling}
           >
             <Check className="h-3.5 w-3.5" />
             Confirmar pagamento
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-red-600 border-red-200 hover:bg-red-50 gap-1.5"
+          </button>
+          <button
+            className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-50"
+            style={{ background: "rgba(239,68,68,0.1)", color: "#EF4444", border: "1px solid rgba(239,68,68,0.2)" }}
             onClick={onCancel}
             disabled={approving || cancelling}
           >
             <X className="h-3.5 w-3.5" />
             Cancelar
-          </Button>
+          </button>
         </div>
       )}
 
@@ -153,13 +183,14 @@ function OrderCard({
           href={`https://wa.me/55${order.buyer_whatsapp}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-2 flex items-center gap-1.5 text-xs text-green-700 hover:underline"
+          className="mt-2 flex items-center gap-1.5 text-xs hover:underline transition-colors"
+          style={{ color: "#22D3EE" }}
         >
           <MessageCircle className="h-3.5 w-3.5" />
           Falar com o comprador
         </a>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -210,15 +241,24 @@ function OrdersSection({ userId }: { userId: string }) {
   const pendentes   = orders.filter((o) => o.status === "pendente");
   const processados = orders.filter((o) => o.status !== "pendente");
 
-  if (isLoading) return <div className="text-sm text-muted-foreground py-8 text-center">Carregando pedidos...</div>;
+  if (isLoading) return (
+    <div className="py-12 text-center text-sm" style={{ color: "#71717A" }}>
+      Carregando pedidos...
+    </div>
+  );
 
   if (orders.length === 0) {
     return (
-      <Card className="p-10 text-center border-dashed">
-        <ShoppingBag className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
-        <p className="text-muted-foreground text-sm">Nenhum pedido recebido ainda.</p>
-        <p className="text-xs text-muted-foreground mt-1">Compartilhe o link do catálogo para começar a receber pedidos.</p>
-      </Card>
+      <div className="rounded-2xl p-10 text-center"
+        style={{
+          background: "rgba(21,27,46,0.5)",
+          border: "1px dashed rgba(255,255,255,0.1)",
+        }}
+      >
+        <ShoppingBag className="h-8 w-8 mx-auto mb-3" style={{ color: "rgba(139,92,246,0.4)" }} />
+        <p className="text-sm" style={{ color: "#A1A1AA" }}>Nenhum pedido recebido ainda.</p>
+        <p className="text-xs mt-1" style={{ color: "#71717A" }}>Compartilhe o link do catálogo para começar a receber pedidos.</p>
+      </div>
     );
   }
 
@@ -226,7 +266,7 @@ function OrdersSection({ userId }: { userId: string }) {
     <div className="space-y-4">
       {pendentes.length > 0 && (
         <div className="space-y-2">
-          <p className="text-sm font-semibold text-amber-700 flex items-center gap-1.5">
+          <p className="text-sm font-semibold flex items-center gap-1.5" style={{ color: "#F59E0B" }}>
             <Clock className="h-4 w-4" />
             {pendentes.length} pedido{pendentes.length > 1 ? "s" : ""} aguardando aprovação
           </p>
@@ -245,7 +285,7 @@ function OrdersSection({ userId }: { userId: string }) {
 
       {processados.length > 0 && (
         <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">Histórico de pedidos</p>
+          <p className="text-sm font-medium" style={{ color: "#71717A" }}>Histórico de pedidos</p>
           {processados.map((order) => (
             <OrderCard key={order.id} order={order} />
           ))}
@@ -311,58 +351,89 @@ function SalesPage() {
   const totalVendas = sales.reduce((acc, s) => acc + Number(s.sale_price) * s.quantity, 0);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Cabeçalho */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Vendas</h1>
-          <p className="text-sm text-muted-foreground mt-1">Pedidos do catálogo e vendas manuais.</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: "#FFFFFF" }}>
+            Vendas
+          </h1>
+          <p className="text-sm mt-1" style={{ color: "#A1A1AA" }}>Pedidos do catálogo e vendas manuais.</p>
         </div>
         {tab === "manual" && (
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />
+          <button
+            onClick={() => setOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95"
+            style={{
+              background: "linear-gradient(135deg, #8B5CF6, #60A5FA)",
+              color: "#fff",
+              boxShadow: "0 0 20px rgba(139,92,246,0.3)",
+            }}
+          >
+            <Plus className="h-4 w-4" />
             Nova venda
-          </Button>
+          </button>
         )}
       </div>
 
       {/* Stats rápidos (vendas manuais) */}
       {tab === "manual" && (
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border p-4 bg-blue-50 border-blue-200">
-            <Receipt className="h-4 w-4 text-blue-600 mb-2" />
-            <div className="text-2xl font-black text-blue-600">{sales.length}</div>
-            <div className="text-xs font-semibold text-blue-600">Vendas registradas</div>
+          <div className="rounded-2xl p-4"
+            style={{
+              background: "rgba(21,27,46,0.6)",
+              backdropFilter: "blur(16px)",
+              border: "1px solid rgba(96,165,250,0.15)",
+            }}
+          >
+            <Receipt className="h-4 w-4 mb-2" style={{ color: "#60A5FA" }} />
+            <div className="text-2xl font-black" style={{ color: "#60A5FA" }}>{sales.length}</div>
+            <div className="text-xs font-semibold mt-0.5" style={{ color: "#A1A1AA" }}>Vendas registradas</div>
           </div>
-          <div className="rounded-xl border p-4 bg-emerald-50 border-emerald-200">
-            <BadgeDollarSign className="h-4 w-4 text-emerald-600 mb-2" />
-            <div className="text-2xl font-black text-emerald-600">{brl(totalVendas)}</div>
-            <div className="text-xs font-semibold text-emerald-600">Total recebido</div>
+          <div className="rounded-2xl p-4"
+            style={{
+              background: "rgba(21,27,46,0.6)",
+              backdropFilter: "blur(16px)",
+              border: "1px solid rgba(34,211,238,0.15)",
+            }}
+          >
+            <BadgeDollarSign className="h-4 w-4 mb-2" style={{ color: "#22D3EE" }} />
+            <div className="text-2xl font-black" style={{ color: "#22D3EE" }}>{brl(totalVendas)}</div>
+            <div className="text-xs font-semibold mt-0.5" style={{ color: "#A1A1AA" }}>Total recebido</div>
           </div>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-muted rounded-lg w-fit">
+      <div className="flex gap-1 p-1 rounded-xl w-fit"
+        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+      >
         <button
           onClick={() => setTab("pedidos")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-            tab === "pedidos" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-          }`}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200"
+          style={{
+            background: tab === "pedidos" ? "rgba(139,92,246,0.2)" : "transparent",
+            color: tab === "pedidos" ? "#A78BFA" : "#71717A",
+            border: tab === "pedidos" ? "1px solid rgba(139,92,246,0.25)" : "1px solid transparent",
+          }}
         >
           <ShoppingBag className="h-4 w-4" />
           Pedidos do catálogo
           {pendingCount > 0 && (
-            <span className="bg-amber-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+            <span className="text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center"
+              style={{ background: "#F59E0B" }}>
               {pendingCount}
             </span>
           )}
         </button>
         <button
           onClick={() => setTab("manual")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-            tab === "manual" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-          }`}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200"
+          style={{
+            background: tab === "manual" ? "rgba(139,92,246,0.2)" : "transparent",
+            color: tab === "manual" ? "#A78BFA" : "#71717A",
+            border: tab === "manual" ? "1px solid rgba(139,92,246,0.25)" : "1px solid transparent",
+          }}
         >
           <Receipt className="h-4 w-4" />
           Vendas manuais
@@ -375,36 +446,50 @@ function SalesPage() {
       ) : (
         <>
           {salesLoading ? (
-            <div className="text-sm text-muted-foreground py-8 text-center">Carregando...</div>
+            <div className="py-12 text-center text-sm" style={{ color: "#71717A" }}>Carregando...</div>
           ) : sales.length === 0 ? (
-            <Card className="p-10 text-center border-dashed">
-              <Receipt className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
-              <p className="text-muted-foreground">Nenhuma venda registrada.</p>
-              <p className="text-xs text-muted-foreground mt-1">Clique em "Nova venda" para registrar manualmente.</p>
-            </Card>
+            <div className="rounded-2xl p-10 text-center"
+              style={{
+                background: "rgba(21,27,46,0.5)",
+                border: "1px dashed rgba(255,255,255,0.1)",
+              }}
+            >
+              <Receipt className="h-8 w-8 mx-auto mb-3" style={{ color: "rgba(139,92,246,0.4)" }} />
+              <p style={{ color: "#A1A1AA" }}>Nenhuma venda registrada.</p>
+              <p className="text-xs mt-1" style={{ color: "#71717A" }}>Clique em "Nova venda" para registrar manualmente.</p>
+            </div>
           ) : (
             <div className="space-y-2 pb-8">
               {sales.map((s) => (
-                <Card key={s.id} className="p-3 shadow-sm">
+                <div key={s.id} className="rounded-2xl p-3 transition-all duration-200"
+                  style={{
+                    background: "rgba(21,27,46,0.6)",
+                    backdropFilter: "blur(16px)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                  }}
+                >
                   <div className="flex gap-3 items-center">
-                    <div className="h-11 w-11 rounded-lg bg-muted flex items-center justify-center shrink-0 font-mono text-xs font-bold text-muted-foreground">
+                    <div className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0 font-mono text-xs font-bold"
+                      style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA" }}>
                       {s.stickers?.code ?? "—"}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium text-sm truncate">
+                      <div className="font-medium text-sm truncate" style={{ color: "#E4E4E7" }}>
                         {s.stickers?.name ?? "Figurinha removida"}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs" style={{ color: "#71717A" }}>
                         {fmtDate(s.created_at)} · {s.quantity} un.
                         {s.buyer_name ? ` · ${s.buyer_name}` : ""}
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="font-semibold text-sm text-emerald-700">{brl(Number(s.sale_price) * s.quantity)}</div>
-                      <div className="text-[10px] text-muted-foreground">{brl(Number(s.sale_price))} cada</div>
+                      <div className="font-semibold text-sm" style={{ color: "#22D3EE" }}>
+                        {brl(Number(s.sale_price) * s.quantity)}
+                      </div>
+                      <div className="text-[10px]" style={{ color: "#71717A" }}>{brl(Number(s.sale_price))} cada</div>
                     </div>
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
           )}
@@ -520,7 +605,13 @@ function NewSaleDialog({
             </div>
           </div>
           {sel && quantity > 0 && salePrice > 0 && (
-            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm font-semibold text-emerald-700">
+            <div className="p-3 rounded-xl text-sm font-semibold"
+              style={{
+                background: "rgba(34,211,238,0.1)",
+                border: "1px solid rgba(34,211,238,0.2)",
+                color: "#22D3EE",
+              }}
+            >
               Total: {brl(salePrice * quantity)}
             </div>
           )}

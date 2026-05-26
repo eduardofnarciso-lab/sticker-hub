@@ -6,9 +6,6 @@ import {
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { analyzeCanvas } from "@/lib/analyzeSticker";
 import { StickerFormDialog, type StickerInput } from "@/components/StickerFormDialog";
@@ -258,15 +255,22 @@ function ScanPage() {
 
       <div className="space-y-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Escanear figurinhas</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Segure a figurinha <strong>perto da câmera</strong> com o código visível →{" "}
-            <kbd className="px-1 py-0.5 rounded bg-muted text-xs font-mono">Espaço</kbd> ou botão azul.
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: "#FFFFFF" }}>
+            Escanear figurinhas
+          </h1>
+          <p className="text-sm mt-1" style={{ color: "#A1A1AA" }}>
+            Segure a figurinha <strong style={{ color: "#E4E4E7" }}>perto da câmera</strong> com o código visível →{" "}
+            <kbd className="px-1.5 py-0.5 rounded text-xs font-mono"
+              style={{ background: "rgba(255,255,255,0.08)", color: "#A1A1AA", border: "1px solid rgba(255,255,255,0.12)" }}>
+              Espaço
+            </kbd>{" "}
+            ou botão azul.
           </p>
         </div>
 
         {/* ── Viewfinder ── */}
-        <div className="relative rounded-2xl overflow-hidden bg-black aspect-video w-full shadow-xl">
+        <div className="relative rounded-2xl overflow-hidden bg-black aspect-video w-full"
+          style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)" }}>
           <video
             ref={videoRef}
             autoPlay playsInline muted
@@ -277,7 +281,8 @@ function ScanPage() {
 
           {/* ── Overlay resultado ── */}
           {overlay?.type === "found" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-green-500/80 gap-3 animate-in fade-in duration-200">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 animate-in fade-in duration-200"
+              style={{ background: "rgba(34,211,238,0.75)" }}>
               <CheckCircle className="h-20 w-20 text-white drop-shadow" />
               <div className="text-center">
                 <div className="text-4xl font-black text-white tracking-widest drop-shadow">{overlay.code}</div>
@@ -287,7 +292,8 @@ function ScanPage() {
           )}
 
           {overlay?.type === "fail" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-500/75 gap-3 animate-in fade-in duration-200">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 animate-in fade-in duration-200"
+              style={{ background: "rgba(239,68,68,0.75)" }}>
               <AlertCircle className="h-20 w-20 text-white drop-shadow" />
               <div className="text-white font-bold text-xl drop-shadow">Não lido</div>
               <div className="text-white/80 text-sm">Ajuste a posição</div>
@@ -324,7 +330,7 @@ function ScanPage() {
             </div>
           )}
 
-          {/* Mira (só quando pronto e sem overlay) */}
+          {/* Mira */}
           {scanning && videoReady && !processing && !overlay && (
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none gap-2">
               <div className="relative w-64 h-44">
@@ -343,9 +349,8 @@ function ScanPage() {
 
           {/* Badge status */}
           {scanning && videoReady && !processing && (
-            <div className={`absolute top-3 left-3 rounded-full px-3 py-1 flex items-center gap-1.5 ${
-              autoMode ? "bg-orange-500/80" : "bg-green-600/80"
-            }`}>
+            <div className="absolute top-3 left-3 rounded-full px-3 py-1 flex items-center gap-1.5"
+              style={{ background: autoMode ? "rgba(245,158,11,0.8)" : "rgba(34,211,238,0.7)" }}>
               <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
               <span className="text-white text-xs font-medium">{autoMode ? "Auto" : "Pronto"}</span>
             </div>
@@ -353,9 +358,8 @@ function ScanPage() {
 
           {/* Engine badge */}
           {engine && scanning && (
-            <div className={`absolute top-3 right-3 rounded-full px-3 py-1 flex items-center gap-1.5 ${
-              engine === "ai" ? "bg-purple-600/80" : "bg-blue-600/80"
-            }`}>
+            <div className="absolute top-3 right-3 rounded-full px-3 py-1 flex items-center gap-1.5"
+              style={{ background: engine === "ai" ? "rgba(139,92,246,0.8)" : "rgba(96,165,250,0.8)" }}>
               <Zap className="h-3 w-3 text-white" />
               <span className="text-white text-xs font-medium">{engine === "ai" ? "IA" : "OCR"}</span>
             </div>
@@ -364,111 +368,140 @@ function ScanPage() {
 
         {/* ── Botões ── */}
         {!scanning ? (
-          <Button className="w-full h-12 text-base" onClick={startCamera}>
-            <Camera className="h-5 w-5 mr-2" /> Ligar câmera
-          </Button>
+          <button className="w-full h-12 rounded-xl text-base font-semibold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
+            style={{ background: "linear-gradient(135deg, #8B5CF6, #60A5FA)", color: "#fff", boxShadow: "0 0 20px rgba(139,92,246,0.3)" }}
+            onClick={startCamera}>
+            <Camera className="h-5 w-5" /> Ligar câmera
+          </button>
         ) : (
           <div className="flex gap-2">
             {/* Captura manual */}
-            <Button
-              className="flex-1 h-14 text-base font-bold bg-blue-600 hover:bg-blue-700 disabled:opacity-40"
+            <button
+              className="flex-1 h-14 rounded-xl text-base font-bold flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-40 active:scale-[0.98]"
+              style={{ background: "linear-gradient(135deg, #60A5FA, #22D3EE)", color: "#0B1020", boxShadow: "0 0 16px rgba(96,165,250,0.3)" }}
               onClick={capture}
               disabled={!videoReady || processing || autoMode}
             >
               {processing && !autoMode
                 ? <Loader2 className="h-6 w-6 animate-spin" />
-                : <><Scan className="h-5 w-5 mr-2" />Capturar</>}
-            </Button>
+                : <><Scan className="h-5 w-5" />Capturar</>}
+            </button>
 
             {/* Auto scan */}
-            <Button
-              className={`h-14 px-5 font-bold ${autoMode
-                ? "bg-orange-500 hover:bg-orange-600"
-                : "bg-green-600 hover:bg-green-700"}`}
+            <button
+              className="h-14 px-5 rounded-xl font-bold flex items-center gap-1 transition-all duration-200 disabled:opacity-40 active:scale-[0.98]"
+              style={{
+                background: autoMode ? "rgba(245,158,11,0.2)" : "rgba(34,211,238,0.15)",
+                color: autoMode ? "#F59E0B" : "#22D3EE",
+                border: `1px solid ${autoMode ? "rgba(245,158,11,0.3)" : "rgba(34,211,238,0.25)"}`,
+              }}
               onClick={toggleAuto}
               disabled={!videoReady}
             >
               {autoMode
-                ? <><StopCircle className="h-5 w-5 mr-1" />Parar</>
-                : <><Play className="h-5 w-5 mr-1" />Auto</>}
-            </Button>
+                ? <><StopCircle className="h-5 w-5" />Parar</>
+                : <><Play className="h-5 w-5" />Auto</>}
+            </button>
 
             {/* Para câmera */}
-            <Button variant="destructive" className="h-14 px-4" onClick={stopCamera}>
+            <button
+              className="h-14 px-4 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-[0.98]"
+              style={{ background: "rgba(239,68,68,0.15)", color: "#EF4444", border: "1px solid rgba(239,68,68,0.25)" }}
+              onClick={stopCamera}>
               <Square className="h-5 w-5" />
-            </Button>
+            </button>
           </div>
         )}
 
         {/* Status */}
         {statusMsg && !processing && !overlay && (
-          <p className="text-xs font-mono text-muted-foreground px-1 break-words">{statusMsg}</p>
+          <p className="text-xs font-mono px-1 break-words" style={{ color: "#71717A" }}>{statusMsg}</p>
         )}
 
         {/* ── Card último resultado ── */}
         {lastResult && (
-          <Card className={`p-4 ${lastResult.found
-            ? "border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-900"
-            : "border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-900"}`}>
-
+          <div className="rounded-2xl p-4"
+            style={{
+              background: lastResult.found ? "rgba(34,211,238,0.07)" : "rgba(245,158,11,0.07)",
+              backdropFilter: "blur(16px)",
+              border: lastResult.found ? "1px solid rgba(34,211,238,0.2)" : "1px solid rgba(245,158,11,0.2)",
+            }}
+          >
             <div className="flex items-center gap-3 mb-3">
               {lastResult.found
-                ? <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
-                : <AlertCircle className="h-5 w-5 text-yellow-500 shrink-0" />}
+                ? <CheckCircle className="h-5 w-5 shrink-0" style={{ color: "#22D3EE" }} />
+                : <AlertCircle className="h-5 w-5 shrink-0" style={{ color: "#F59E0B" }} />}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="secondary" className="font-mono font-bold text-base">{lastResult.code}</Badge>
-                  <span className="font-semibold text-sm truncate">{lastResult.name}</span>
+                  <span className="font-mono font-bold text-base px-2 py-0.5 rounded-lg"
+                    style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA" }}>
+                    {lastResult.code}
+                  </span>
+                  <span className="font-semibold text-sm truncate" style={{ color: "#E4E4E7" }}>{lastResult.name}</span>
                 </div>
-                {lastResult.team && <p className="text-xs text-muted-foreground mt-0.5">{lastResult.team}</p>}
+                {lastResult.team && (
+                  <p className="text-xs mt-0.5" style={{ color: "#71717A" }}>{lastResult.team}</p>
+                )}
               </div>
             </div>
 
             {lastResult.found ? (
               <div className="flex items-center justify-center gap-6 py-1">
-                <Button size="lg" variant="outline"
-                  className="h-14 w-14 rounded-full text-red-600 border-red-300 hover:bg-red-50"
+                <button
+                  className="h-14 w-14 rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-30 active:scale-95"
+                  style={{ background: "rgba(239,68,68,0.15)", color: "#EF4444", border: "1px solid rgba(239,68,68,0.25)" }}
                   onClick={() => adjustStock(-1)} disabled={lastResult.qty <= 0}>
                   <Minus className="h-6 w-6" />
-                </Button>
+                </button>
                 <div className="text-center">
-                  <div className="text-4xl font-black tabular-nums">{lastResult.qty}</div>
-                  <div className="text-xs text-muted-foreground">em estoque</div>
+                  <div className="text-4xl font-black tabular-nums" style={{ color: "#22D3EE" }}>{lastResult.qty}</div>
+                  <div className="text-xs" style={{ color: "#71717A" }}>em estoque</div>
                 </div>
-                <Button size="lg" className="h-14 w-14 rounded-full" onClick={() => adjustStock(1)}>
+                <button
+                  className="h-14 w-14 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95"
+                  style={{ background: "rgba(34,211,238,0.15)", color: "#22D3EE", border: "1px solid rgba(34,211,238,0.25)" }}
+                  onClick={() => adjustStock(1)}>
                   <Plus className="h-6 w-6" />
-                </Button>
+                </button>
               </div>
             ) : (
-              <Button className="w-full" onClick={() => {
-                setDialogInitial({ code: lastResult.code, condition: "nova", quantity: 1, price: 0, status: "disponivel" });
-                setDialogOpen(true);
-              }}>
-                <Plus className="h-4 w-4 mr-1" /> Cadastrar "{lastResult.code}"
-              </Button>
+              <button
+                className="w-full h-10 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm transition-all duration-200 active:scale-[0.98]"
+                style={{ background: "linear-gradient(135deg, #8B5CF6, #60A5FA)", color: "#fff" }}
+                onClick={() => {
+                  setDialogInitial({ code: lastResult.code, condition: "nova", quantity: 1, price: 0, status: "disponivel" });
+                  setDialogOpen(true);
+                }}>
+                <Plus className="h-4 w-4" /> Cadastrar "{lastResult.code}"
+              </button>
             )}
-          </Card>
+          </div>
         )}
 
         {/* ── Histórico da sessão ── */}
         {recentScans.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#52525B" }}>
               Sessão ({recentScans.length})
             </p>
             <div className="space-y-1 max-h-72 overflow-y-auto">
               {recentScans.map((s) => (
-                <div key={s.ts} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm border ${
-                  s.found
-                    ? "bg-green-50 border-green-100 dark:bg-green-950/10 dark:border-green-900"
-                    : "bg-yellow-50 border-yellow-100 dark:bg-yellow-950/10 dark:border-yellow-900"
-                }`}>
+                <div key={s.ts} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm"
+                  style={{
+                    background: s.found ? "rgba(34,211,238,0.07)" : "rgba(245,158,11,0.07)",
+                    border: s.found ? "1px solid rgba(34,211,238,0.15)" : "1px solid rgba(245,158,11,0.15)",
+                  }}>
                   {s.found
-                    ? <CheckCircle className="h-3.5 w-3.5 text-green-500 shrink-0" />
-                    : <AlertCircle className="h-3.5 w-3.5 text-yellow-500 shrink-0" />}
-                  <Badge variant="secondary" className="font-mono text-xs">{s.code}</Badge>
-                  <span className="truncate flex-1 text-muted-foreground text-xs">{s.name}</span>
-                  {s.found && <span className="text-xs font-bold text-green-700 dark:text-green-400">×{s.qty}</span>}
+                    ? <CheckCircle className="h-3.5 w-3.5 shrink-0" style={{ color: "#22D3EE" }} />
+                    : <AlertCircle className="h-3.5 w-3.5 shrink-0" style={{ color: "#F59E0B" }} />}
+                  <span className="font-mono text-xs px-1.5 py-0.5 rounded font-bold"
+                    style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA" }}>
+                    {s.code}
+                  </span>
+                  <span className="truncate flex-1 text-xs" style={{ color: "#71717A" }}>{s.name}</span>
+                  {s.found && (
+                    <span className="text-xs font-bold" style={{ color: "#22D3EE" }}>×{s.qty}</span>
+                  )}
                 </div>
               ))}
             </div>

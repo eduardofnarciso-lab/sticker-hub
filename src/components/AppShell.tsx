@@ -7,6 +7,8 @@ import {
   Share2,
   LogOut,
   ShieldCheck,
+  ScanLine,
+  Sparkles,
 } from "lucide-react";
 import { type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -27,7 +29,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Busca perfil do usuário (nome + is_admin)
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     enabled: !!user?.id,
@@ -60,29 +61,39 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   };
 
-  // Navegação completa (inclui Admin se for admin)
   const navItems = [
     ...nav,
     ...(isAdmin ? [{ to: "/admin" as const, label: "Admin", icon: ShieldCheck }] : []),
   ];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row">
-      {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r bg-card">
-        <div className="p-6">
-          <div className="flex items-center gap-2">
-            <div
-              className="h-9 w-9 rounded-xl flex items-center justify-center text-primary-foreground"
-              style={{ background: "var(--gradient-primary)" }}
+    <div className="min-h-screen flex flex-col md:flex-row" style={{ background: "#0B1020" }}>
+
+      {/* ── Desktop sidebar ── */}
+      <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r"
+        style={{
+          background: "rgba(11, 16, 32, 0.95)",
+          backdropFilter: "blur(20px)",
+          borderColor: "rgba(255,255,255,0.06)",
+        }}
+      >
+        {/* Logo */}
+        <div className="p-6 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: "linear-gradient(135deg, #8B5CF6, #60A5FA)" }}
             >
-              <Sticker className="h-5 w-5" />
+              <Sparkles className="h-4 w-4 text-white" />
             </div>
-            <div className="font-semibold tracking-tight">Figurinhas</div>
+            <div>
+              <div className="font-bold text-white tracking-tight">Figu</div>
+              <div className="text-[10px]" style={{ color: "#A1A1AA" }}>Copa 2026</div>
+            </div>
           </div>
         </div>
 
-        <nav className="flex-1 px-3 space-y-1">
+        {/* Nav items */}
+        <nav className="flex-1 px-3 space-y-0.5">
           {navItems.map((item) => {
             const active = path.startsWith(item.to);
             const Icon   = item.icon;
@@ -90,90 +101,189 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  active
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                }`}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group"
+                style={{
+                  background: active ? "rgba(139, 92, 246, 0.15)" : "transparent",
+                  color: active ? "#8B5CF6" : "#A1A1AA",
+                  border: active ? "1px solid rgba(139, 92, 246, 0.2)" : "1px solid transparent",
+                }}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-4 w-4 shrink-0" />
                 {item.label}
+                {active && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full"
+                    style={{ background: "#8B5CF6", boxShadow: "0 0 6px #8B5CF6" }} />
+                )}
               </Link>
             );
           })}
+
+          {/* Scan — separado para evitar conflito de tipagem */}
+          <Link
+            to="/scan"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mt-1"
+            style={{
+              background: path.startsWith("/scan") ? "rgba(139, 92, 246, 0.15)" : "transparent",
+              color: path.startsWith("/scan") ? "#8B5CF6" : "#A1A1AA",
+              border: path.startsWith("/scan") ? "1px solid rgba(139, 92, 246, 0.2)" : "1px solid transparent",
+            }}
+          >
+            <ScanLine className="h-4 w-4 shrink-0" />
+            Scan / Câmera
+            {path.startsWith("/scan") && (
+              <span className="ml-auto h-1.5 w-1.5 rounded-full"
+                style={{ background: "#8B5CF6", boxShadow: "0 0 6px #8B5CF6" }} />
+            )}
+          </Link>
         </nav>
 
-        {/* Rodapé da sidebar: usuário + ações */}
-        <div className="p-3 border-t space-y-1">
-          <Button variant="ghost" className="w-full justify-start gap-3 text-sm" onClick={sharePublic}>
+        {/* Rodapé sidebar */}
+        <div className="p-3 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+          <button
+            onClick={sharePublic}
+            className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm transition-all duration-200 mb-1"
+            style={{ color: "#A1A1AA" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
             <Share2 className="h-4 w-4" />
             Catálogo público
-          </Button>
-          <div className="flex items-center gap-2 px-3 py-2">
-            <div className="h-7 w-7 rounded-full bg-accent flex items-center justify-center text-xs font-bold uppercase text-accent-foreground shrink-0">
-              {displayName.charAt(0)}
+          </button>
+
+          {/* Usuário */}
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl"
+            style={{ background: "rgba(255,255,255,0.03)" }}
+          >
+            <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+              style={{ background: "linear-gradient(135deg, #8B5CF6, #60A5FA)", color: "#fff" }}
+            >
+              {displayName.charAt(0).toUpperCase()}
             </div>
-            <span className="text-xs font-medium truncate flex-1">{displayName}</span>
-            <button
-              onClick={handleSignOut}
-              className="text-muted-foreground hover:text-red-500 transition-colors"
-              title="Sair"
+            <span className="text-xs font-medium truncate flex-1" style={{ color: "#FFFFFF" }}>
+              {displayName}
+            </span>
+            <button onClick={handleSignOut} title="Sair" className="transition-colors"
+              style={{ color: "#71717A" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#EF4444")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#71717A")}
             >
               <LogOut className="h-4 w-4" />
             </button>
           </div>
-
         </div>
       </aside>
 
-      {/* Mobile top bar */}
-      <header className="md:hidden sticky top-0 z-30 bg-card/95 backdrop-blur border-b px-4 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-primary-foreground"
-            style={{ background: "var(--gradient-primary)" }}
+      {/* ── Mobile top bar ── */}
+      <header className="md:hidden sticky top-0 z-30 px-4 h-14 flex items-center justify-between"
+        style={{
+          background: "rgba(11, 16, 32, 0.85)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: "linear-gradient(135deg, #8B5CF6, #60A5FA)" }}
           >
-            <Sticker className="h-4 w-4" />
+            <Sparkles className="h-4 w-4 text-white" />
           </div>
-          <div className="font-semibold tracking-tight text-sm">Figurinhas</div>
+          <div>
+            <span className="font-bold text-white text-sm">Figu</span>
+            <span className="text-[10px] ml-1.5" style={{ color: "#A1A1AA" }}>Copa 2026</span>
+          </div>
         </div>
         <div className="flex items-center gap-1">
-          <Button size="icon" variant="ghost" onClick={sharePublic} aria-label="Compartilhar">
+          <Button size="icon" variant="ghost" onClick={sharePublic}
+            className="text-zinc-400 hover:text-white hover:bg-white/5"
+          >
             <Share2 className="h-5 w-5" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={handleSignOut} aria-label="Sair">
+          <Button size="icon" variant="ghost" onClick={handleSignOut}
+            className="text-zinc-400 hover:text-red-400 hover:bg-red-500/5"
+          >
             <LogOut className="h-5 w-5" />
           </Button>
         </div>
       </header>
 
-      {/* Main */}
-      <main className="flex-1 md:ml-64 flex flex-col pb-16 md:pb-0">
-        <div className="flex-1 max-w-6xl w-full mx-auto px-4 md:px-8 py-4 md:py-8">{children}</div>
+      {/* ── Main ── */}
+      <main className="flex-1 md:ml-64 flex flex-col pb-20 md:pb-0">
+        <div className="flex-1 max-w-6xl w-full mx-auto px-4 md:px-8 py-4 md:py-8">
+          {children}
+        </div>
 
-        {/* Rodapé global */}
-        <footer className="border-t bg-card/50 py-3 px-4 md:px-8">
-          <p className="text-center text-[11px] text-muted-foreground/50">
+        {/* Footer */}
+        <footer className="py-3 px-4 text-center"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}
+        >
+          <p className="text-[11px]" style={{ color: "#71717A" }}>
             Desenvolvido por{" "}
-            <span className="font-semibold text-muted-foreground/70">SpiritRelay</span>
-            {" "}· Empresa de Desenvolvimento
+            <span style={{ color: "#A1A1AA" }}>SpiritRelay</span>
+            {" "}· Plataforma de Figurinhas
           </p>
         </footer>
       </main>
 
-      {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-card border-t pb-[env(safe-area-inset-bottom)]">
-        <div className={`grid grid-cols-${navItems.length}`}>
-          {navItems.map((item) => {
+      {/* ── Mobile bottom nav ── */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30"
+        style={{
+          background: "rgba(11, 16, 32, 0.92)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <div className="flex items-end">
+          {/* Início + Figurinhas */}
+          {navItems.slice(0, 2).map((item) => {
             const active = path.startsWith(item.to);
             const Icon   = item.icon;
             return (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium ${
-                  active ? "text-primary" : "text-muted-foreground"
-                }`}
+                className="flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium flex-1 transition-all"
+                style={{ color: active ? "#8B5CF6" : "#71717A" }}
+              >
+                <Icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+
+          {/* Botão Scan central */}
+          <div className="flex flex-col items-center flex-shrink-0 px-2 pb-1">
+            <Link
+              to="/scan"
+              className="flex items-center justify-center -mt-5 h-14 w-14 rounded-full transition-all active:scale-95"
+              style={{
+                background: path.startsWith("/scan")
+                  ? "linear-gradient(135deg, #8B5CF6, #60A5FA)"
+                  : "linear-gradient(135deg, #8B5CF6, #60A5FA)",
+                boxShadow: "0 0 20px rgba(139, 92, 246, 0.4), 0 4px 12px rgba(0,0,0,0.4)",
+                color: "#fff",
+              }}
+            >
+              <ScanLine className="h-6 w-6" />
+            </Link>
+            <span className="text-[10px] font-medium mt-1"
+              style={{ color: path.startsWith("/scan") ? "#8B5CF6" : "#71717A" }}
+            >
+              Scan
+            </span>
+          </div>
+
+          {/* Estoque + Vendas */}
+          {navItems.slice(2).map((item) => {
+            const active = path.startsWith(item.to);
+            const Icon   = item.icon;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium flex-1 transition-all"
+                style={{ color: active ? "#8B5CF6" : "#71717A" }}
               >
                 <Icon className="h-5 w-5" />
                 <span>{item.label}</span>
@@ -182,6 +292,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </div>
       </nav>
+
     </div>
   );
 }

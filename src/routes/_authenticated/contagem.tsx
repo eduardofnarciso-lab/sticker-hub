@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -163,19 +162,25 @@ function ContagemPage() {
       {/* Cabeçalho */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Figurinhas</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            <span className="font-semibold text-foreground">{totalEmEstoque}</span> em estoque
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: "#FFFFFF" }}>Figurinhas</h1>
+          <p className="text-sm mt-1" style={{ color: "#A1A1AA" }}>
+            <span className="font-semibold" style={{ color: "#22D3EE" }}>{totalEmEstoque}</span> em estoque
             · 48 seleções · ordem do álbum
           </p>
         </div>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
-              <RotateCcw className="h-4 w-4 mr-1" />
+            <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200"
+              style={{
+                background: "rgba(239,68,68,0.1)",
+                color: "#EF4444",
+                border: "1px solid rgba(239,68,68,0.2)",
+              }}
+            >
+              <RotateCcw className="h-4 w-4" />
               Zerar tudo
-            </Button>
+            </button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -196,7 +201,7 @@ function ContagemPage() {
 
       {/* Busca */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#71717A" }} />
         <Input
           className="pl-9"
           placeholder="Buscar seleção ou código (ex: BRA, JOR, FRA...)"
@@ -213,23 +218,27 @@ function ContagemPage() {
           const flagSrc   = flagUrl(sec.teamCode, "w40");
           return (
             <div key={sec.team}>
-              <div className="flex items-center gap-2 mb-3 pb-1 border-b">
+              <div className="flex items-center gap-2 mb-3 pb-2"
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                 {flagSrc
-                  ? <img src={flagSrc} alt={sec.team} className="h-5 w-auto rounded-sm shadow-sm" />
+                  ? <img src={flagSrc} alt={sec.team} className="h-5 w-auto rounded-sm" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.4)" }} />
                   : <span className="text-base">🏆</span>
                 }
-                <span className="font-semibold text-sm">{sec.team}</span>
+                <span className="font-semibold text-sm" style={{ color: "#E4E4E7" }}>{sec.team}</span>
                 {!isIntro && (
-                  <span className="text-[10px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                    style={{ background: "rgba(255,255,255,0.05)", color: "#71717A" }}>
                     Grupo {sec.group}
                   </span>
                 )}
-                <Badge
-                  variant={teamTotal > 0 ? "default" : "outline"}
-                  className="ml-auto text-xs"
-                >
+                <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full"
+                  style={{
+                    background: teamTotal > 0 ? "rgba(34,211,238,0.12)" : "rgba(255,255,255,0.04)",
+                    color: teamTotal > 0 ? "#22D3EE" : "#52525B",
+                    border: `1px solid ${teamTotal > 0 ? "rgba(34,211,238,0.25)" : "rgba(255,255,255,0.06)"}`,
+                  }}>
                   {teamTotal} un.
-                </Badge>
+                </span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
@@ -239,36 +248,41 @@ function ContagemPage() {
                   return (
                     <div
                       key={tpl.code}
-                      className={`rounded-xl border p-2 flex flex-col items-center gap-1 transition-all ${
-                        q > 0
-                          ? "border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-950/30"
-                          : "border-border bg-card hover:bg-muted/40"
-                      }`}
+                      className="rounded-xl p-2 flex flex-col items-center gap-1 transition-all duration-200"
+                      style={{
+                        background: q > 0
+                          ? "rgba(34,211,238,0.08)"
+                          : "rgba(21,27,46,0.5)",
+                        border: q > 0
+                          ? "1px solid rgba(34,211,238,0.2)"
+                          : "1px solid rgba(255,255,255,0.06)",
+                      }}
                     >
                       <div className="flex items-center gap-1">
                         {flagSrc
                           ? <img src={flagSrc} alt="" className="h-3.5 w-auto rounded-[2px]" />
                           : <span className="text-xs">🏆</span>
                         }
-                        <span className={`font-mono text-xs font-bold ${q > 0 ? "text-green-700" : "text-muted-foreground"}`}>
+                        <span className="font-mono text-xs font-bold"
+                          style={{ color: q > 0 ? "#22D3EE" : "#71717A" }}>
                           {fmtCode(tpl.code)}
                         </span>
                       </div>
 
-                      <span className="text-[10px] text-center text-muted-foreground leading-tight line-clamp-2 min-h-[2rem]">
+                      <span className="text-[10px] text-center leading-tight line-clamp-2 min-h-[2rem]"
+                        style={{ color: "#71717A" }}>
                         {fmtName(tpl.name)}
                       </span>
 
                       <div className="flex items-center gap-1 w-full mt-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className={`h-7 w-7 shrink-0 rounded-lg text-red-500 hover:bg-red-50 ${q === 0 ? "opacity-30" : ""}`}
+                        <button
+                          className="h-7 w-7 shrink-0 rounded-lg flex items-center justify-center transition-all duration-200 disabled:opacity-30"
+                          style={{ background: "rgba(239,68,68,0.1)", color: "#EF4444" }}
                           onClick={() => adjust(tpl, -1)}
                           disabled={q === 0}
                         >
                           <Minus className="h-3.5 w-3.5" />
-                        </Button>
+                        </button>
 
                         <input
                           type="number"
@@ -280,23 +294,21 @@ function ContagemPage() {
                             clearTimeout(timers.current[tpl.code]);
                             timers.current[tpl.code] = setTimeout(() => persist(tpl, val), 600);
                           }}
-                          className={`flex-1 w-0 min-w-0 text-center text-lg font-black tabular-nums rounded-lg border-0 bg-transparent outline-none focus:ring-1 focus:ring-green-400 ${
-                            q > 0 ? "text-green-600" : "text-muted-foreground/40"
-                          }`}
+                          className="flex-1 w-0 min-w-0 text-center text-lg font-black tabular-nums rounded-lg border-0 bg-transparent outline-none"
+                          style={{ color: q > 0 ? "#22D3EE" : "#3F3F46" }}
                         />
 
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 shrink-0 rounded-lg text-green-600 hover:bg-green-50"
+                        <button
+                          className="h-7 w-7 shrink-0 rounded-lg flex items-center justify-center transition-all duration-200"
+                          style={{ background: "rgba(34,211,238,0.1)", color: "#22D3EE" }}
                           onClick={() => adjust(tpl, 1)}
                         >
                           <Plus className="h-3.5 w-3.5" />
-                        </Button>
+                        </button>
                       </div>
 
                       {isSaving && (
-                        <span className="text-[9px] text-muted-foreground animate-pulse">salvando...</span>
+                        <span className="text-[9px] animate-pulse" style={{ color: "#71717A" }}>salvando...</span>
                       )}
                     </div>
                   );

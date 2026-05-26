@@ -6,10 +6,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { fmtCode, fmtName } from "@/lib/format";
 
@@ -32,10 +29,10 @@ function brl(v: number) {
 
 type FilterKey = "all" | "disponivel" | "reservada" | "vendida" | "falta";
 
-const STATUS_COLORS: Record<string, string> = {
-  disponivel: "bg-green-100 text-green-700 border-green-200",
-  reservada:  "bg-amber-100 text-amber-700 border-amber-200",
-  vendida:    "bg-blue-100 text-blue-700 border-blue-200",
+const STATUS_STYLES: Record<string, { bg: string; color: string; border: string }> = {
+  disponivel: { bg: "rgba(34,211,238,0.1)",  color: "#22D3EE", border: "rgba(34,211,238,0.25)" },
+  reservada:  { bg: "rgba(245,158,11,0.12)", color: "#F59E0B", border: "rgba(245,158,11,0.25)" },
+  vendida:    { bg: "rgba(96,165,250,0.12)", color: "#60A5FA", border: "rgba(96,165,250,0.25)" },
 };
 
 function StockPage() {
@@ -146,9 +143,7 @@ function StockPage() {
       value: brl(stats.valorEstimado),
       sub: "em estoque disponível",
       icon: Package,
-      color: "text-green-600",
-      bg: "bg-green-50 border-green-200",
-      activeBg: "bg-green-600 text-white border-green-600",
+      accent: "#22D3EE",
     },
     {
       key: "vendida" as FilterKey,
@@ -156,9 +151,7 @@ function StockPage() {
       value: brl(stats.valorVendido),
       sub: "pedidos aprovados",
       icon: BadgeDollarSign,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50 border-emerald-200",
-      activeBg: "bg-emerald-600 text-white border-emerald-600",
+      accent: "#34D399",
     },
     {
       key: "reservada" as FilterKey,
@@ -166,9 +159,7 @@ function StockPage() {
       value: brl(stats.valorPendente),
       sub: `${stats.qtdPendentes} pedido${stats.qtdPendentes !== 1 ? "s" : ""} aguardando`,
       icon: Clock,
-      color: "text-amber-600",
-      bg: "bg-amber-50 border-amber-200",
-      activeBg: "bg-amber-500 text-white border-amber-500",
+      accent: "#F59E0B",
     },
     {
       key: "all" as FilterKey,
@@ -176,9 +167,7 @@ function StockPage() {
       value: stats.normais,
       sub: "jogadores · R$ 1,00",
       icon: CheckCircle2,
-      color: "text-blue-600",
-      bg: "bg-blue-50 border-blue-200",
-      activeBg: "bg-blue-600 text-white border-blue-600",
+      accent: "#60A5FA",
     },
     {
       key: "all" as FilterKey,
@@ -186,54 +175,68 @@ function StockPage() {
       value: stats.especiais,
       sub: "logos e copa · R$ 2,00",
       icon: AlertCircle,
-      color: "text-purple-600",
-      bg: "bg-purple-50 border-purple-200",
-      activeBg: "bg-purple-600 text-white border-purple-600",
+      accent: "#8B5CF6",
     },
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Cabeçalho */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Estoque</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: "#FFFFFF" }}>Estoque</h1>
+          <p className="text-sm mt-1" style={{ color: "#A1A1AA" }}>
             {stickers.length} figurinhas · valor total {brl(valorTotal)}
           </p>
         </div>
-        <Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0}>
-          <Download className="h-4 w-4 mr-1" />
+        <button
+          onClick={exportCSV}
+          disabled={filtered.length === 0}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-40"
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            color: "#A1A1AA",
+            border: "1px solid rgba(255,255,255,0.1)",
+          }}
+        >
+          <Download className="h-4 w-4" />
           Exportar CSV
-        </Button>
+        </button>
       </div>
 
       {/* 5 Cards de resumo */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        {CARDS.map((c) => {
+        {CARDS.map((c, i) => {
           const Icon = c.icon;
-          const active = filter === c.key;
+          const active = filter === c.key && c.key !== "all";
           return (
             <button
-              key={c.key}
-              onClick={() => setFilter(active ? "all" : c.key)}
-              className={`rounded-xl border p-4 text-left transition-all shadow-sm hover:scale-[1.02] ${
-                active ? c.activeBg : c.bg
-              }`}
+              key={`${c.key}-${i}`}
+              onClick={() => c.key !== "all" && setFilter(active ? "all" : c.key)}
+              className="rounded-2xl p-4 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.99]"
+              style={{
+                background: active
+                  ? `rgba(${c.accent === "#22D3EE" ? "34,211,238" : c.accent === "#34D399" ? "52,211,153" : c.accent === "#F59E0B" ? "245,158,11" : c.accent === "#60A5FA" ? "96,165,250" : "139,92,246"},0.18)`
+                  : "rgba(21,27,46,0.6)",
+                backdropFilter: "blur(16px)",
+                border: `1px solid ${active ? c.accent + "55" : "rgba(255,255,255,0.07)"}`,
+                boxShadow: active ? `0 0 20px ${c.accent}22` : "none",
+                cursor: c.key === "all" ? "default" : "pointer",
+              }}
             >
               <div className="flex items-center justify-between mb-2">
-                <Icon className={`h-5 w-5 ${active ? "text-white/90" : c.color}`} />
+                <Icon className="h-4 w-4" style={{ color: c.accent }} />
                 {active && (
-                  <span className="text-[10px] font-bold uppercase tracking-wide opacity-70">filtrado</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: c.accent }}>filtrado</span>
                 )}
               </div>
-              <div className={`text-3xl font-black tabular-nums ${active ? "text-white" : ""}`}>
+              <div className="text-2xl font-black tabular-nums" style={{ color: active ? c.accent : "#FFFFFF" }}>
                 {c.value}
               </div>
-              <div className={`text-xs font-semibold mt-0.5 ${active ? "text-white/80" : c.color}`}>
+              <div className="text-xs font-semibold mt-0.5" style={{ color: c.accent }}>
                 {c.label}
               </div>
-              <div className={`text-[11px] mt-0.5 ${active ? "text-white/60" : "text-muted-foreground"}`}>
+              <div className="text-[11px] mt-0.5" style={{ color: "#71717A" }}>
                 {c.sub}
               </div>
             </button>
@@ -243,7 +246,7 @@ function StockPage() {
 
       {/* Busca */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#71717A" }} />
         <Input
           className="pl-9"
           placeholder="Buscar por código, nome, time..."
@@ -254,52 +257,65 @@ function StockPage() {
 
       {/* Lista */}
       {isLoading ? (
-        <div className="text-sm text-muted-foreground py-8 text-center">Carregando...</div>
+        <div className="py-12 text-center text-sm" style={{ color: "#71717A" }}>Carregando...</div>
       ) : filtered.length === 0 ? (
-        <Card className="p-10 text-center border-dashed">
-          <p className="text-muted-foreground">Nada encontrado.</p>
-        </Card>
+        <div className="rounded-2xl p-10 text-center"
+          style={{ background: "rgba(21,27,46,0.5)", border: "1px dashed rgba(255,255,255,0.1)" }}>
+          <p style={{ color: "#A1A1AA" }}>Nada encontrado.</p>
+        </div>
       ) : (
         <div className="space-y-2 pb-8">
           {filtered.map((s) => {
             const price = stickerPrice(s.code);
             const emFalta = s.quantity === 0 && s.status !== "vendida";
+            const statusStyle = emFalta
+              ? { bg: "rgba(239,68,68,0.12)", color: "#EF4444", border: "rgba(239,68,68,0.25)" }
+              : (STATUS_STYLES[s.status] ?? { bg: "rgba(255,255,255,0.05)", color: "#A1A1AA", border: "rgba(255,255,255,0.1)" });
             return (
-              <Card key={s.id} className={`p-3 shadow-sm transition-colors ${emFalta ? "border-red-200 bg-red-50/30" : ""}`}>
+              <div key={s.id} className="rounded-2xl p-3 transition-all duration-200"
+                style={{
+                  background: emFalta ? "rgba(239,68,68,0.05)" : "rgba(21,27,46,0.6)",
+                  backdropFilter: "blur(16px)",
+                  border: emFalta ? "1px solid rgba(239,68,68,0.15)" : "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
                 <div className="flex gap-3 items-center">
                   {/* Código */}
-                  <div className={`h-12 w-12 rounded-lg flex items-center justify-center flex-shrink-0 font-mono text-xs font-bold ${
-                    emFalta
-                      ? "bg-red-100 text-red-500"
-                      : s.quantity > 0
-                      ? "bg-green-100 text-green-700"
-                      : "bg-muted text-muted-foreground"
-                  }`}>
+                  <div className="h-12 w-12 rounded-xl flex items-center justify-center flex-shrink-0 font-mono text-xs font-bold"
+                    style={{
+                      background: emFalta
+                        ? "rgba(239,68,68,0.12)"
+                        : s.quantity > 0
+                        ? "rgba(34,211,238,0.12)"
+                        : "rgba(255,255,255,0.04)",
+                      color: emFalta
+                        ? "#EF4444"
+                        : s.quantity > 0
+                        ? "#22D3EE"
+                        : "#52525B",
+                    }}>
                     {fmtCode(s.code) || "—"}
                   </div>
 
                   {/* Info */}
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-medium text-sm truncate">{fmtName(s.name)}</span>
-                    </div>
+                    <span className="font-medium text-sm truncate block" style={{ color: "#E4E4E7" }}>
+                      {fmtName(s.name)}
+                    </span>
                     <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                      <span className="text-xs text-muted-foreground">{s.team ?? ""}</span>
-                      <span className="text-xs font-semibold text-foreground">{brl(price)}</span>
-                      {/* Badge status */}
-                      {emFalta ? (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-red-100 text-red-600 border-red-200">
-                          Em Falta
-                        </span>
-                      ) : (
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
-                          STATUS_COLORS[s.status] ?? "bg-muted text-muted-foreground"
-                        }`}>
-                          {s.status === "disponivel" ? "Em Estoque"
-                            : s.status === "reservada" ? "Pendente"
-                            : "Vendida"}
-                        </span>
-                      )}
+                      <span className="text-xs" style={{ color: "#71717A" }}>{s.team ?? ""}</span>
+                      <span className="text-xs font-semibold" style={{ color: "#A78BFA" }}>{brl(price)}</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                        style={{
+                          background: statusStyle.bg,
+                          color: statusStyle.color,
+                          border: `1px solid ${statusStyle.border}`,
+                        }}>
+                        {emFalta ? "Em Falta"
+                          : s.status === "disponivel" ? "Em Estoque"
+                          : s.status === "reservada" ? "Pendente"
+                          : "Vendida"}
+                      </span>
                     </div>
                   </div>
 
@@ -308,24 +324,27 @@ function StockPage() {
                     <button
                       onClick={() => adjustQty.mutate({ id: s.id, qty: s.quantity, delta: -1 })}
                       disabled={s.quantity === 0}
-                      className="h-8 w-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 disabled:opacity-30 transition-colors"
+                      className="h-8 w-8 rounded-xl flex items-center justify-center transition-all duration-200 disabled:opacity-30"
+                      style={{ background: "rgba(239,68,68,0.1)", color: "#EF4444" }}
                     >
                       <Minus className="h-3.5 w-3.5" />
                     </button>
-                    <span className={`text-xl font-black tabular-nums w-8 text-center ${
-                      emFalta ? "text-red-400" : s.quantity > 0 ? "text-green-600" : "text-muted-foreground/40"
-                    }`}>
+                    <span className="text-xl font-black tabular-nums w-8 text-center"
+                      style={{
+                        color: emFalta ? "#EF4444" : s.quantity > 0 ? "#22D3EE" : "#3F3F46",
+                      }}>
                       {s.quantity}
                     </span>
                     <button
                       onClick={() => adjustQty.mutate({ id: s.id, qty: s.quantity, delta: 1 })}
-                      className="h-8 w-8 rounded-lg flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors"
+                      className="h-8 w-8 rounded-xl flex items-center justify-center transition-all duration-200"
+                      style={{ background: "rgba(34,211,238,0.1)", color: "#22D3EE" }}
                     >
                       <Plus className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
-              </Card>
+              </div>
             );
           })}
         </div>
