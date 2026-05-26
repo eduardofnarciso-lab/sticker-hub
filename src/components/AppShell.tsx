@@ -147,7 +147,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* Nav items */}
         <nav className="flex-1 px-3 space-y-0.5">
           {navItems.map((item) => {
-            const active = path.startsWith(item.to);
+            const active = path === item.to || path.startsWith(item.to + "/");
             const Icon   = item.icon;
             return (
               <Link
@@ -275,7 +275,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <div className="flex">
           {navItems.map((item) => {
-            const active = path.startsWith(item.to);
+            const active = path === item.to || path.startsWith(item.to + "/");
             const Icon   = item.icon;
             return (
               <Link
