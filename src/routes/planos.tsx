@@ -336,7 +336,7 @@ function PlanosPage() {
         fontSize: "0.625rem", color: "#52525B", zIndex: 10,
       }}>
         Desenvolvido por{" "}
-        <a href="https://spiritrelay.com.br" target="_blank" rel="noopener noreferrer"
+        <a href="https://spiritrelay.com/" target="_blank" rel="noopener noreferrer"
           style={{ color: "#A78BFA", textDecoration: "none" }}>
           SpiritRelay
         </a>

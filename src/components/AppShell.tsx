@@ -248,7 +248,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="text-[11px]" style={{ color: "#71717A" }}>
             Desenvolvido por{" "}
             <a
-              href="https://spiritrelay.com.br"
+              href="https://spiritrelay.com/"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: "#A78BFA", textDecoration: "none" }}

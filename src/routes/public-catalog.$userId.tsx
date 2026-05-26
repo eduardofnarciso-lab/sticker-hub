@@ -848,7 +848,7 @@ function PublicCatalog() {
         style={{ background: "rgba(11,16,32,0.85)", borderColor: "rgba(255,255,255,0.06)", color: "#71717A" }}>
         Desenvolvido por{" "}
         <a
-          href="https://spiritrelay.com.br"
+          href="https://spiritrelay.com/"
           target="_blank"
           rel="noopener noreferrer"
           style={{ color: "#A78BFA", textDecoration: "none" }}
