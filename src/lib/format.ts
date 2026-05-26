@@ -1,9 +1,27 @@
-// Preço dinâmico pelo código: logo (XX1) e FWC = R$2, demais = R$1
+// Preço base pelo código: logo (XX1) e FWC = R$2, demais = R$1
 export function stickerPrice(code: string | null | undefined): number {
   if (!code) return 1;
   if (code === "00" || code.startsWith("FWC")) return 2;
   if (/^[A-Z]{2,3}1$/.test(code)) return 2;
   return 1;
+}
+
+// Faixas de desconto por volume (qtd total do carrinho)
+// 100–199 → normal 0,95 / brilhante 1,95
+// 200–300 → normal 0,90 / brilhante 1,90
+export function discountedPrice(code: string | null | undefined, totalQty: number): number {
+  const base = stickerPrice(code);
+  const special = base === 2;
+  if (totalQty >= 200) return special ? 1.90 : 0.90;
+  if (totalQty >= 100) return special ? 1.95 : 0.95;
+  return base;
+}
+
+// Rótulo do desconto ativo
+export function discountLabel(totalQty: number): { pct: number; label: string } | null {
+  if (totalQty >= 200) return { pct: 10, label: "200+ figurinhas — 10% de desconto" };
+  if (totalQty >= 100) return { pct: 5,  label: "100+ figurinhas — 5% de desconto" };
+  return null;
 }
 
 // Formata código: "ALG1" → "ALG 1", "ALG10" → "ALG 10"

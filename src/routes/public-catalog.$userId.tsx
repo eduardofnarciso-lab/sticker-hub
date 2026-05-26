@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { brl, fmtCode, fmtName, stickerPrice } from "@/lib/format";
+import { brl, fmtCode, fmtName, stickerPrice, discountedPrice, discountLabel } from "@/lib/format";
 import { flagUrl } from "@/lib/copa2026Data";
 import { toast } from "sonner";
 
@@ -226,8 +226,13 @@ function PublicCatalog() {
     () => stickers.reduce((acc, s) => acc + s.quantity, 0),
     [stickers]
   );
-  const cartTotal = cart.reduce((acc, i) => acc + i.qty, 0);
-  const cartValue = cart.reduce((acc, i) => acc + i.qty * i.price, 0);
+  const cartTotal    = cart.reduce((acc, i) => acc + i.qty, 0);
+  // Preço cheio (sem desconto) para mostrar economia
+  const cartFull     = cart.reduce((acc, i) => acc + i.qty * stickerPrice(i.code), 0);
+  // Preço com desconto por volume aplicado
+  const cartValue    = cart.reduce((acc, i) => acc + i.qty * discountedPrice(i.code, cartTotal), 0);
+  const cartDiscount = discountLabel(cartTotal);
+  const cartSaving   = cartFull - cartValue;
 
   // ── Grupos por time ─────────────────────────────────────────────────────────
   const groups = useMemo(() => {
@@ -321,7 +326,7 @@ function PublicCatalog() {
           sticker_code: c.code,
           sticker_name: c.name,
           quantity:     c.qty,
-          unit_price:   c.price,
+          unit_price:   discountedPrice(c.code, cartTotal), // preço com desconto
         })),
       });
       if (error) throw error;
@@ -547,9 +552,17 @@ function PublicCatalog() {
                           <div className="flex-1 min-w-0">
                             <div className="text-sm truncate">{fmtName(s.name)}</div>
                             <div className="flex items-center gap-2 mt-0.5">
-                              {price > 0 && (
-                                <span className="text-xs font-bold text-green-700">{brl(price)}</span>
-                              )}
+                              {(() => {
+                                const dprice = discountedPrice(s.code, cartTotal);
+                                return (
+                                  <>
+                                    <span className="text-xs font-bold text-green-700">{brl(dprice)}</span>
+                                    {dprice < price && (
+                                      <span className="text-[10px] line-through text-muted-foreground/60">{brl(price)}</span>
+                                    )}
+                                  </>
+                                );
+                              })()}
                               <span className="text-xs text-muted-foreground">
                                 {esgotado
                                   ? "Indisponível"
@@ -649,9 +662,9 @@ function PublicCatalog() {
                       <div className="text-sm truncate">{fmtName(item.name)}</div>
                       {item.price > 0 && (
                         <div className="text-xs text-muted-foreground">
-                          {brl(item.price)} × {item.qty} ={" "}
+                          {brl(discountedPrice(item.code, cartTotal))} × {item.qty} ={" "}
                           <span className="font-semibold text-green-700">
-                            {brl(item.price * item.qty)}
+                            {brl(discountedPrice(item.code, cartTotal) * item.qty)}
                           </span>
                         </div>
                       )}
@@ -689,11 +702,36 @@ function PublicCatalog() {
               <div className="px-4 py-4 border-t space-y-3">
                 {/* Total */}
                 {cartValue > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">
-                      {cartTotal} figurinha{cartTotal !== 1 ? "s" : ""}
-                    </span>
-                    <span className="text-lg font-black text-green-700">{brl(cartValue)}</span>
+                  <div className="space-y-1.5">
+                    {/* Badge de desconto */}
+                    {cartDiscount && (
+                      <div className="flex items-center justify-between rounded-lg bg-green-50 border border-green-200 px-3 py-1.5">
+                        <span className="text-xs font-bold text-green-700">
+                          🎉 {cartDiscount.label}
+                        </span>
+                        <span className="text-xs font-semibold text-green-600">
+                          −{brl(cartSaving)}
+                        </span>
+                      </div>
+                    )}
+                    {/* Próxima faixa */}
+                    {cartTotal < 100 && (
+                      <p className="text-[11px] text-center text-muted-foreground">
+                        Adicione mais {100 - cartTotal} figurinha{100 - cartTotal !== 1 ? "s" : ""} para ganhar 5% de desconto
+                      </p>
+                    )}
+                    {cartTotal >= 100 && cartTotal < 200 && (
+                      <p className="text-[11px] text-center text-muted-foreground">
+                        Mais {200 - cartTotal} figurinha{200 - cartTotal !== 1 ? "s" : ""} para 10% de desconto
+                      </p>
+                    )}
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="text-sm text-muted-foreground">
+                        {cartTotal} figurinha{cartTotal !== 1 ? "s" : ""}
+                        {cartDiscount && <span className="ml-1 text-[10px] line-through text-muted-foreground/50">{brl(cartFull)}</span>}
+                      </span>
+                      <span className="text-lg font-black text-green-700">{brl(cartValue)}</span>
+                    </div>
                   </div>
                 )}
 
