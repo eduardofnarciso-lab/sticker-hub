@@ -7,6 +7,7 @@ import {
   Share2,
   LogOut,
   ShieldCheck,
+  ClipboardList,
 } from "lucide-react";
 import { type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -62,10 +63,11 @@ function FiguLogo({ size = 28 }: { size?: number }) {
 }
 
 const nav = [
-  { to: "/dashboard", label: "Início",     icon: LayoutDashboard },
-  { to: "/contagem",  label: "Figurinhas", icon: Sticker },
-  { to: "/stock",     label: "Estoque",    icon: PackageSearch },
-  { to: "/sales",     label: "Vendas",     icon: Receipt },
+  { to: "/dashboard",     label: "Início",     icon: LayoutDashboard },
+  { to: "/contagem",      label: "Figurinhas", icon: Sticker },
+  { to: "/stock",         label: "Estoque",    icon: PackageSearch },
+  { to: "/sales",         label: "Vendas",     icon: Receipt },
+  { to: "/stock-history", label: "Histórico",  icon: ClipboardList },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -283,13 +285,4 @@ export function AppShell({ children }: { children: ReactNode }) {
                 style={{ color: active ? "#8B5CF6" : "#71717A" }}
               >
                 <Icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-
-    </div>
-  );
-}
+                <span>{item.label}</

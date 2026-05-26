@@ -1,0 +1,372 @@
+{
+  "name": "Figurinhas — WhatsApp Completo (Pedido + PIX + Comprovante)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "figurinhas-whatsapp",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-entrada",
+      "name": "Webhook — WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "ok",
+        "options": {}
+      },
+      "id": "respond-ok",
+      "name": "Responde OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [460, 120]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst data = body.data || body;\nif (data?.key?.fromMe) return [];\nconst from = (data?.key?.remoteJid || '').replace('@s.whatsapp.net','').replace(/\\D/g,'');\nif (!from) return [];\nconst keys = data?.message ? Object.keys(data.message) : [];\nconst msgType = keys.find(k => !['senderKeyDistributionMessage','messageContextInfo'].includes(k)) || '';\nconst msgText = (data?.message?.conversation || data?.message?.extendedTextMessage?.text || data?.message?.imageMessage?.caption || '').trim();\nconst hasImage = ['imageMessage','documentMessage','documentWithCaptionMessage'].includes(msgType);\nconst codes = msgText.toUpperCase().split(/[\\n,;]+/).map(l=>l.trim().replace(/\\s+/g,'')).filter(l=>/^[A-Z]{2,3}\\d{1,2}$|^FWC\\d{1,2}$|^00$/.test(l));\nconst isOrderKw = /\\b(PEDIR|PEDIDO|COMPRAR|QUERO)\\b/.test(msgText.toUpperCase());\nconst isReceiptKw = /comprovante|paguei|pago|transferi|enviei|pixado|realizei/i.test(msgText);\nconst isReceipt = hasImage || isReceiptKw;\nlet routeType = 'ignore';\nif (codes.length > 0 && isOrderKw) routeType = 'order';\nelse if (isReceipt) routeType = 'receipt';\nelse if (codes.length > 0) routeType = 'stock';\nreturn [{ json: { from, msgText, codes, hasImage, routeType } }];"
+      },
+      "id": "code-parse-route",
+      "name": "Parse e Rota",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 340]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [{ "value1": "={{ $json.routeType }}", "operation": "equal", "value2": "order" }]
+        }
+      },
+      "id": "if-is-order",
+      "name": "É pedido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [700, 340]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [{ "value1": "={{ $json.routeType }}", "operation": "equal", "value2": "receipt" }]
+        }
+      },
+      "id": "if-is-receipt",
+      "name": "É comprovante?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [700, 500]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [{ "value1": "={{ $json.routeType }}", "operation": "equal", "value2": "stock" }]
+        }
+      },
+      "id": "if-is-stock",
+      "name": "É consulta?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [700, 660]
+    },
+
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://ruqkuwnxsjiadkhqfmvx.supabase.co/rest/v1/stickers?select=id,code,name,quantity&status=eq.disponivel&quantity=gt.0&user_id=eq.SELLER_USER_ID_AQUI&code=in.({{ $json.codes.map(c => `\"${c}\"`).join(',') }})",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "SUA_SUPABASE_ANON_KEY_AQUI" },
+            { "name": "Authorization", "value": "Bearer SUA_SUPABASE_ANON_KEY_AQUI" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-stock-ordem",
+      "name": "Supabase — Estoque p/ Pedido",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "const stockData = Array.isArray($input.first().json) ? $input.first().json : [];\nconst parseData = $('Parse e Rota').first().json;\nconst { from, codes } = parseData;\nfunction preco(c) {\n  if (!c) return 1;\n  if (c === '00' || c.startsWith('FWC')) return 2;\n  if (/^[A-Z]{2,3}1$/.test(c)) return 2;\n  return 1;\n}\nfunction precoDesc(c, n) {\n  const b = preco(c), sp = b === 2;\n  if (n >= 500) return sp ? 1.85 : 0.85;\n  if (n >= 250) return sp ? 1.90 : 0.90;\n  if (n >= 150) return sp ? 1.95 : 0.95;\n  return b;\n}\nfunction brl(v) { return 'R$ ' + v.toFixed(2).replace('.', ','); }\nconst map = new Map(stockData.map(s => [s.code, s]));\nconst disp = [], indisp = [];\nfor (const c of codes) {\n  const s = map.get(c);\n  if (s && s.quantity > 0) disp.push({ sticker_id: s.id, code: c, name: s.name });\n  else indisp.push(c);\n}\nif (disp.length === 0) {\n  return [{ json: { from, routeType: 'no_stock', msg: '😕 Nenhuma das figurinhas solicitadas está disponível no momento.\\n\\nTente novamente ou entre em contato!' } }];\n}\nconst totalQty = disp.length;\nconst totalValor = disp.reduce((a, s) => a + precoDesc(s.code, totalQty), 0);\nlet descMsg = '';\nif (totalQty >= 500) descMsg = '\\n🏷️ _Desconto de 15% aplicado!_';\nelse if (totalQty >= 250) descMsg = '\\n🏷️ _Desconto de 10% aplicado!_';\nelse if (totalQty >= 150) descMsg = '\\n🏷️ _Desconto de 5% aplicado!_';\nconst linhasDisp = disp.map(s => `  ✅ ${s.code} — ${brl(precoDesc(s.code, totalQty))}`);\nconst linhasIndisp = indisp.map(c => `  ❌ ${c}`);\nconst pixKey = '15991460543';\nconst msg = [\n  '🏷️ *Figurinhas Copa 2026 — Pedido Confirmado!*', '',\n  `*Disponíveis (${disp.length}):*`,\n  ...linhasDisp,\n  ...(indisp.length > 0 ? ['', `*Indisponíveis (${indisp.length}):*`, ...linhasIndisp] : []),\n  '', `💰 *Total: ${brl(totalValor)}*${descMsg}`, '',\n  '━━━━━━━━━━━━━━━━━',\n  '💳 *Pagamento via PIX*', '',\n  `🔑 *Chave PIX (Telefone):*\\n\\`${pixKey}\\``,\n  '', `📌 *Como pagar:*\\n1. Abra seu banco\\n2. PIX → Pagar\\n3. Digite a chave acima\\n4. Confirme: *${brl(totalValor)}*\\n5. 📸 Envie o comprovante aqui`,\n  '━━━━━━━━━━━━━━━━━', '',\n  '_Após o comprovante separamos suas figurinhas!_ 📦'\n].join('\\n');\nconst items = disp.map(s => ({ sticker_id: s.sticker_id, sticker_code: s.code, sticker_name: s.name, quantity: 1, unit_price: precoDesc(s.code, totalQty) }));\nreturn [{ json: { from, msg, totalValor, items, routeType: 'order' } }];"
+      },
+      "id": "code-monta-ordem",
+      "name": "Monta Pedido + PIX",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 240]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [{ "value1": "={{ $json.routeType }}", "operation": "equal", "value2": "order" }]
+        }
+      },
+      "id": "if-tem-estoque",
+      "name": "Tem figurinhas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1440, 240]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://ruqkuwnxsjiadkhqfmvx.supabase.co/rest/v1/rpc/place_order",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "SUA_SUPABASE_ANON_KEY_AQUI" },
+            { "name": "Authorization", "value": "Bearer SUA_SUPABASE_ANON_KEY_AQUI" },
+            { "name": "Content-Type",  "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"p_seller_id\":\"SELLER_USER_ID_AQUI\",\"p_buyer_name\":\"Cliente WhatsApp\",\"p_buyer_whatsapp\":\"{{ $json.from }}\",\"p_total_value\":{{ $json.totalValor }},\"p_items\":{{ JSON.stringify($json.items) }}}",
+        "options": {}
+      },
+      "id": "http-criar-pedido",
+      "name": "Supabase — Cria Pedido",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1680, 140]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evolutionapi.imctatui.online/message/sendText/IPC",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",       "value": "SUA_API_KEY_AQUI" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"number\":\"55{{ $('Monta Pedido + PIX').first().json.from }}\",\"text\":{{ JSON.stringify($('Monta Pedido + PIX').first().json.msg) }}}",
+        "options": {}
+      },
+      "id": "http-envia-pix",
+      "name": "Evolution — Envia PIX ao cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1920, 140]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evolutionapi.imctatui.online/message/sendText/IPC",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",       "value": "SUA_API_KEY_AQUI" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"number\":\"55{{ $json.from }}\",\"text\":{{ JSON.stringify($json.msg) }}}",
+        "options": {}
+      },
+      "id": "http-sem-estoque",
+      "name": "Evolution — Sem estoque",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1680, 340]
+    },
+
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://ruqkuwnxsjiadkhqfmvx.supabase.co/rest/v1/orders?select=id,buyer_name,buyer_whatsapp,total_value,status&buyer_whatsapp=eq.{{ $json.from }}&status=eq.pendente&order=created_at.desc&limit=1",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "SUA_SUPABASE_ANON_KEY_AQUI" },
+            { "name": "Authorization", "value": "Bearer SUA_SUPABASE_ANON_KEY_AQUI" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-busca-pedido",
+      "name": "Supabase — Pedido pendente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "const orders = Array.isArray($input.first().json) ? $input.first().json : [];\nconst from = $('Parse e Rota').first().json.from;\nconst order = orders[0] || null;\nconst msgCliente = order\n  ? [\n      '✅ *Comprovante recebido!*', '',\n      `Seu pedido *#${order.id.slice(0,8).toUpperCase()}* foi confirmado.`,\n      '📦 Estamos separando suas figurinhas!',\n      '', '_Em breve entraremos em contato para combinar a entrega._ 😊'\n    ].join('\\n')\n  : '✅ *Comprovante recebido!*\\n\\nEm breve confirmaremos seu pedido. 📦';\nconst totalStr = order ? `R$ ${Number(order.total_value).toFixed(2).replace('.',',')}` : '—';\nconst buyerName = order?.buyer_name || from;\nconst orderId = order ? `#${order.id.slice(0,8).toUpperCase()}` : 'novo';\nconst msgVendedor = [\n  '🔔 *Comprovante de pagamento recebido!*', '',\n  `👤 *Cliente:* ${buyerName}`,\n  `📱 *WhatsApp:* ${from}`,\n  `💰 *Valor:* ${totalStr}`,\n  `📋 *Pedido:* ${orderId}`, '',\n  '👉 Acesse o painel e *confirme o pagamento* para dar baixa no estoque.'\n].join('\\n');\nreturn [{ json: { from, msgCliente, msgVendedor } }];"
+      },
+      "id": "code-comprovante",
+      "name": "Monta msgs comprovante",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evolutionapi.imctatui.online/message/sendText/IPC",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",       "value": "SUA_API_KEY_AQUI" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"number\":\"55{{ $json.from }}\",\"text\":{{ JSON.stringify($json.msgCliente) }}}",
+        "options": {}
+      },
+      "id": "http-confirma-cliente",
+      "name": "Evolution — Confirma ao cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evolutionapi.imctatui.online/message/sendText/IPC",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",       "value": "SUA_API_KEY_AQUI" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"number\":\"5515991460543\",\"text\":{{ JSON.stringify($('Monta msgs comprovante').first().json.msgVendedor) }}}",
+        "options": {}
+      },
+      "id": "http-avisa-vendedor",
+      "name": "Evolution — Avisa vendedor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1680, 500]
+    },
+
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://ruqkuwnxsjiadkhqfmvx.supabase.co/rest/v1/stickers?select=id,code,name,quantity&status=eq.disponivel&quantity=gt.0&user_id=eq.SELLER_USER_ID_AQUI&code=in.({{ $json.codes.map(c => `\"${c}\"`).join(',') }})",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "SUA_SUPABASE_ANON_KEY_AQUI" },
+            { "name": "Authorization", "value": "Bearer SUA_SUPABASE_ANON_KEY_AQUI" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-stock-consulta",
+      "name": "Supabase — Consulta estoque",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 660]
+    },
+    {
+      "parameters": {
+        "jsCode": "const stockData = Array.isArray($input.first().json) ? $input.first().json : [];\nconst parseData = $('Parse e Rota').first().json;\nconst { from, codes } = parseData;\nfunction preco(c) {\n  if (!c) return 1;\n  if (c === '00' || c.startsWith('FWC')) return 2;\n  if (/^[A-Z]{2,3}1$/.test(c)) return 2;\n  return 1;\n}\nfunction precoDesc(c, n) {\n  const b = preco(c), sp = b === 2;\n  if (n >= 500) return sp ? 1.85 : 0.85;\n  if (n >= 250) return sp ? 1.90 : 0.90;\n  if (n >= 150) return sp ? 1.95 : 0.95;\n  return b;\n}\nfunction brl(v) { return 'R$ ' + v.toFixed(2).replace('.', ','); }\nconst map = new Map(stockData.map(s => [s.code, s]));\nconst disp = [], indisp = [];\nfor (const c of codes) {\n  const s = map.get(c);\n  if (s && s.quantity > 0) disp.push({ code: c, qty: s.quantity });\n  else indisp.push(c);\n}\nconst totalQty = disp.length;\nlet descMsg = '';\nif (totalQty >= 500) descMsg = '\\n🏷️ _15% de desconto aplicado!_';\nelse if (totalQty >= 250) descMsg = '\\n🏷️ _10% de desconto aplicado!_';\nelse if (totalQty >= 150) descMsg = '\\n🏷️ _5% de desconto aplicado!_';\nelse if (totalQty >= 100) descMsg = '\\n💡 _Com 150+ figurinhas você ganha 5% de desconto!_';\nlet msg = '🔍 *Verificação de estoque*\\n\\n';\nif (disp.length > 0) {\n  const total = disp.reduce((a, s) => a + precoDesc(s.code, totalQty), 0);\n  msg += `*Disponíveis (${disp.length}):*\\n`;\n  msg += disp.map(s => `  ✅ ${s.code} — ${brl(precoDesc(s.code, totalQty))}`).join('\\n') + '\\n';\n  msg += `\\n💰 *Total: ${brl(total)}*${descMsg}\\n`;\n}\nif (indisp.length > 0) {\n  msg += `\\n*Indisponíveis (${indisp.length}):*\\n`;\n  msg += indisp.map(c => `  ❌ ${c}`).join('\\n') + '\\n';\n}\nif (disp.length > 0) {\n  msg += '\\n_Para comprar, envie a lista com a palavra *PEDIR*_ 🛒';\n}\nreturn [{ json: { from, msg } }];"
+      },
+      "id": "code-resp-estoque",
+      "name": "Monta resposta estoque",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 660]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evolutionapi.imctatui.online/message/sendText/IPC",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",       "value": "SUA_API_KEY_AQUI" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"number\":\"55{{ $json.from }}\",\"text\":{{ JSON.stringify($json.msg) }}}",
+        "options": {}
+      },
+      "id": "http-envia-consulta",
+      "name": "Evolution — Responde consulta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, 660]
+    }
+  ],
+
+  "connections": {
+    "Webhook — WhatsApp": {
+      "main": [[
+        { "node": "Responde OK",  "type": "main", "index": 0 },
+        { "node": "Parse e Rota", "type": "main", "index": 0 }
+      ]]
+    },
+    "Parse e Rota": {
+      "main": [[{ "node": "É pedido?", "type": "main", "index": 0 }]]
+    },
+    "É pedido?": {
+      "main": [
+        [{ "node": "Supabase — Estoque p/ Pedido", "type": "main", "index": 0 }],
+        [{ "node": "É comprovante?", "type": "main", "index": 0 }]
+      ]
+    },
+    "É comprovante?": {
+      "main": [
+        [{ "node": "Supabase — Pedido pendente", "type": "main", "index": 0 }],
+        [{ "node": "É consulta?", "type": "main", "index": 0 }]
+      ]
+    },
+    "É consulta?": {
+      "main": [
+        [{ "node": "Supabase — Consulta estoque", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Supabase — Estoque p/ Pedido": {
+      "main": [[{ "node": "Monta Pedido + PIX", "type": "main", "index": 0 }]]
+    },
+    "Monta Pedido + PIX": {
+      "main": [[{ "node": "Tem figurinhas?", "type": "main", "index": 0 }]]
+    },
+    "Tem figurinhas?": {
+      "main": [
+        [{ "node": "Supabase — Cria Pedido", "type": "main", "index": 0 }],
+        [{ "node": "Evolution — Sem estoque",  "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase — Cria Pedido": {
+      "main": [[{ "node": "Evolution — Envia PIX ao cliente", "type": "main", "index": 0 }]]
+    },
+    "Supabase — Pedido pendente": {
+      "main": [[{ "node": "Monta msgs comprovante", "type": "main", "index": 0 }]]
+    },
+    "Monta msgs comprovante": {
+      "main": [[{ "node": "Evolution — Confirma ao cliente", "type": "main", "index": 0 }]]
+    },
+    "Evolution — Confirma ao cliente": {
+      "main": [[{ "node": "Evolution — Avisa vendedor", "type": "main", "index": 0 }]]
+    },
+    "Supabase — Consulta estoque": {
+      "main": [[{ "node": "Monta resposta estoque", "type": "main", "index": 0 }]]
+    },
+    "Monta resposta estoque": {
+      "main": [[{ "node": "Evolution — Responde consulta", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" }
+}

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PlanosRouteImport } from './routes/planos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -21,7 +22,13 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedContagemRouteImport } from './routes/_authenticated/contagem'
 import { Route as AuthenticatedAlbumsRouteImport } from './routes/_authenticated/albums'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedStockHistoryRouteImport } from './routes/_authenticated/stock-history'
 
+const PlanosRoute = PlanosRouteImport.update({
+  id: '/planos',
+  path: '/planos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -81,10 +88,16 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedStockHistoryRoute = AuthenticatedStockHistoryRouteImport.update({
+  id: '/stock-history',
+  path: '/stock-history',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/planos': typeof PlanosRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/albums': typeof AuthenticatedAlbumsRoute
   '/contagem': typeof AuthenticatedContagemRoute
@@ -93,11 +106,13 @@ export interface FileRoutesByFullPath {
   '/scan': typeof AuthenticatedScanRoute
   '/stickers': typeof AuthenticatedStickersRoute
   '/stock': typeof AuthenticatedStockRoute
+  '/stock-history': typeof AuthenticatedStockHistoryRoute
   '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/planos': typeof PlanosRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/albums': typeof AuthenticatedAlbumsRoute
   '/contagem': typeof AuthenticatedContagemRoute
@@ -106,6 +121,7 @@ export interface FileRoutesByTo {
   '/scan': typeof AuthenticatedScanRoute
   '/stickers': typeof AuthenticatedStickersRoute
   '/stock': typeof AuthenticatedStockRoute
+  '/stock-history': typeof AuthenticatedStockHistoryRoute
   '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
 }
 export interface FileRoutesById {
@@ -113,6 +129,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/planos': typeof PlanosRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/albums': typeof AuthenticatedAlbumsRoute
   '/_authenticated/contagem': typeof AuthenticatedContagemRoute
@@ -121,6 +138,7 @@ export interface FileRoutesById {
   '/_authenticated/scan': typeof AuthenticatedScanRoute
   '/_authenticated/stickers': typeof AuthenticatedStickersRoute
   '/_authenticated/stock': typeof AuthenticatedStockRoute
+  '/_authenticated/stock-history': typeof AuthenticatedStockHistoryRoute
   '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
 }
 export interface FileRouteTypes {
@@ -128,6 +146,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/planos'
     | '/admin'
     | '/albums'
     | '/contagem'
@@ -136,11 +155,13 @@ export interface FileRouteTypes {
     | '/scan'
     | '/stickers'
     | '/stock'
+    | '/stock-history'
     | '/public-catalog/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
+    | '/planos'
     | '/admin'
     | '/albums'
     | '/contagem'
@@ -149,12 +170,14 @@ export interface FileRouteTypes {
     | '/scan'
     | '/stickers'
     | '/stock'
+    | '/stock-history'
     | '/public-catalog/$userId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/login'
+    | '/planos'
     | '/_authenticated/admin'
     | '/_authenticated/albums'
     | '/_authenticated/contagem'
@@ -163,6 +186,7 @@ export interface FileRouteTypes {
     | '/_authenticated/scan'
     | '/_authenticated/stickers'
     | '/_authenticated/stock'
+    | '/_authenticated/stock-history'
     | '/public-catalog/$userId'
   fileRoutesById: FileRoutesById
 }
@@ -170,11 +194,19 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  PlanosRoute: typeof PlanosRoute
   PublicCatalogUserIdRoute: typeof PublicCatalogUserIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/planos': {
+      id: '/planos'
+      path: '/planos'
+      fullPath: '/planos'
+      preLoaderRoute: typeof PlanosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -259,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/stock-history': {
+      id: '/_authenticated/stock-history'
+      path: '/stock-history'
+      fullPath: '/stock-history'
+      preLoaderRoute: typeof AuthenticatedStockHistoryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -271,6 +310,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
   AuthenticatedStickersRoute: typeof AuthenticatedStickersRoute
   AuthenticatedStockRoute: typeof AuthenticatedStockRoute
+  AuthenticatedStockHistoryRoute: typeof AuthenticatedStockHistoryRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -279,31 +319,4 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedContagemRoute: AuthenticatedContagemRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSalesRoute: AuthenticatedSalesRoute,
-  AuthenticatedScanRoute: AuthenticatedScanRoute,
-  AuthenticatedStickersRoute: AuthenticatedStickersRoute,
-  AuthenticatedStockRoute: AuthenticatedStockRoute,
-}
-
-const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
-  AuthenticatedRouteChildren,
-)
-
-const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  LoginRoute: LoginRoute,
-  PublicCatalogUserIdRoute: PublicCatalogUserIdRoute,
-}
-export const routeTree = rootRouteImport
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
+  AuthenticatedScanRou

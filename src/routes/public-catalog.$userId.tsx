@@ -633,7 +633,7 @@ function PublicCatalog() {
                               <span className="text-xs text-muted-foreground">
                                 {esgotado
                                   ? "Indisponível"
-                                  : `${avail} disponíve${avail > 1 ? "is" : "l"}`}
+                                  : `${Math.max(0, s.quantity - (reservedMap.get(s.id) ?? 0))} disp.`}
                               </span>
                             </div>
                           </div>
@@ -820,51 +820,4 @@ function PublicCatalog() {
                 />
                 <Input
                   placeholder="Sua cidade *"
-                  value={buyerCity}
-                  onChange={(e) => setBuyerCity(e.target.value)}
-                />
-                {buyerCity.trim() &&
-                  buyerCity.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "") !== "tatui" && (
-                  <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 text-xs"
-                    style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", color: "#F59E0B" }}>
-                    <span className="text-base leading-none">🚚</span>
-                    <span>Entregas fora de Tatuí têm frete a combinar com o vendedor.</span>
-                  </div>
-                )}
-                <Button
-                  className="w-full h-12 font-bold bg-green-600 hover:bg-green-700 gap-2 text-base"
-                  onClick={sendOrder}
-                  disabled={sending}
-                >
-                  <Send className="h-4 w-4" />
-                  {sending ? "Enviando..." : `Enviar pedido — ${brl(cartValue)}`}
-                </Button>
-                <p className="text-xs text-center text-muted-foreground">
-                  Você será redirecionado ao WhatsApp do vendedor para confirmar o PIX.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Espaço para o footer fixo não cobrir conteúdo */}
-      <div className="h-10" />
-
-      {/* Footer fixo */}
-      <footer className="fixed bottom-0 left-0 right-0 backdrop-blur border-t py-2 text-center text-[10px] z-10"
-        style={{ background: "rgba(11,16,32,0.85)", borderColor: "rgba(255,255,255,0.06)", color: "#71717A" }}>
-        Desenvolvido por{" "}
-        <a
-          href="https://spiritrelay.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: "#A78BFA", textDecoration: "none" }}
-        >
-          SpiritRelay
-        </a>
-        {" "}· Plataforma de Figurinhas
-      </footer>
-    </div>
-  );
-}
+        

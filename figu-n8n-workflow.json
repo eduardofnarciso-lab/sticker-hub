@@ -1,0 +1,140 @@
+{
+  "name": "Figu — WhatsApp Pedido + PIX",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-figu",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Webhook — WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "figu-whatsapp"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {}
+      },
+      "id": "node-respond",
+      "name": "Responde OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [460, 180]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\n\n// Texto da mensagem recebida\nconst msg =\n  body?.data?.message?.conversation ??\n  body?.data?.message?.extendedTextMessage?.text ??\n  body?.message?.conversation ??\n  body?.text ??\n  \"\";\n\n// Número de quem enviou (vendedor — o próprio número da instância)\nconst from = body?.data?.key?.remoteJid ?? body?.key?.remoteJid ?? \"\";\n\n// É gatilho de pedido?\nconst isPedido = msg.toLowerCase().startsWith(\"#pedido\");\n\n// Extrai WhatsApp do cliente (linha: 📱 WhatsApp: 15999990000)\nconst phoneMatch = msg.match(/WhatsApp[:\\*\\s]+(?:55)?(\\d{10,11})/i);\nconst clientPhone = phoneMatch ? phoneMatch[1].replace(/\\D/g, \"\") : \"\";\n\n// Extrai valor total (R$ 4,00)\nconst totalMatch = msg.match(/Total[:\\s\\*]*R\\$\\s*([\\d.,]+)/i);\nconst total = totalMatch ? totalMatch[1].trim() : \"0,00\";\n\n// Extrai ID do pedido (#D953828E)\nconst idMatch = msg.match(/#([A-F0-9]{6,8})/i);\nconst orderId = idMatch ? idMatch[1].toUpperCase() : \"\";\n\n// Extrai quantidade\nconst qtyMatch = msg.match(/#pedido\\s+(\\d+)/i);\nconst qty = qtyMatch ? qtyMatch[1] : \"?\";\n\nreturn [{ json: { isPedido, clientPhone, total, orderId, qty, from, msg } }];"
+      },
+      "id": "node-parse",
+      "name": "Parse mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-is-pedido",
+              "leftValue": "={{ $json.isPedido }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-has-phone",
+              "leftValue": "={{ $json.clientPhone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if",
+      "name": "É pedido válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://SUA_EVOLUTION_URL/message/sendText/SUA_INSTANCIA",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "SUA_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "number": "=55{{ $json.clientPhone }}",
+          "text": "=Olá! ✅ Recebemos seu pedido *#{{ $json.orderId }}*.\n\n📋 *{{ $json.qty }} figurinha(s)*\n💰 *Total: R$ {{ $json.total }}*\n\n💳 *Chave PIX:*\n`SUA_CHAVE_PIX`\n\nApós realizar o pagamento, envie o comprovante aqui com a mensagem:\n\n*#comprovante*\n\nObrigado! 🙌"
+        },
+        "options": {}
+      },
+      "id": "node-send-pix",
+      "name": "Envia PIX ao cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 240]
+    }
+  ],
+  "connections": {
+    "Webhook — WhatsApp": {
+      "main": [
+        [
+          { "node": "Responde OK", "type": "main", "index": 0 },
+          { "node": "Parse mensagem", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Parse mensagem": {
+      "main": [
+        [
+          { "node": "É pedido válido?", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "É pedido válido?": {
+      "main": [
+        [
+          { "node": "Envia PIX ao cliente", "type": "main", "index": 0 }
+        ],
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
