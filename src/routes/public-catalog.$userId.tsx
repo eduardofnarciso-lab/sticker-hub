@@ -836,7 +836,7 @@ function PublicCatalog() {
       {/* ── Carrinho — bottom sheet ── */}
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex flex-col">
-          <div className="flex-1 bg-black/50" onClick={() => setCartOpen(false)} />
+          <div className="flex-1" onClick={() => setCartOpen(false)} />
           <div className="bg-card rounded-t-2xl shadow-2xl max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <div className="font-semibold">
