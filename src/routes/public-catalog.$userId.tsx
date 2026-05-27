@@ -367,16 +367,16 @@ function PublicCatalog() {
       const msg = [
         `#pedido ${totalQty} figurinhas`,
         ``,
-        `🏷️ *Pedido de Figurinhas Copa 2026*`,
+        `📦 *Pedido de Figurinhas Copa 2026*`,
         ``,
         `👤 *Nome:* ${buyerName.trim()}`,
         `📱 *WhatsApp:* ${buyerPhone.trim()}`,
-        `🏙️ *Cidade:* ${buyerCity.trim()}${!isTatui ? " _(frete a combinar)_" : ""}`,
+        `📍 *Cidade:* ${buyerCity.trim()}${!isTatui ? " _(frete a combinar)_" : ""}`,
         ``,
         `🔢 *Quantidade:* ${totalQty} figurinha${totalQty !== 1 ? "s" : ""}`,
         `💰 *Total: ${brl(cartValue)}*`,
         ``,
-        `🆔 Pedido: #${shortId}`,
+        `🔖 Pedido: #${shortId}`,
       ].join("\n");
 
       setWaUrl(`https://wa.me/55${sellerPhone}?text=${encodeURIComponent(msg)}`);

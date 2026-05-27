@@ -250,7 +250,7 @@ function OrderCard({
               {item.unit_price > 0 && !tradeItems[item.id] && (
                 <span className="shrink-0" style={{ color: "#71717A" }}>{brl(item.unit_price * item.quantity)}</span>
               )}
-              {(isAprovado || isSeparado) && (
+              {(isPending || isAprovado) && (
                 <button
                   onClick={(e) => { e.stopPropagation(); toggleTrade(item.id); }}
                   disabled={togglingTrade === item.id}
