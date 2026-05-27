@@ -1109,7 +1109,13 @@ function PublicCatalog() {
         >
           SpiritRelay
         </a>
-        {" "}· Plataforma de Figurinhas
+        {" "}·{" "}
+        <a
+          href="mailto:contato@spiritrelay.com"
+          style={{ color: "#71717A", textDecoration: "none" }}
+        >
+          contato@spiritrelay.com
+        </a>
       </footer>
     </div>
   );

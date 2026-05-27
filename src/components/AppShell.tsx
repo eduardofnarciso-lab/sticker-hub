@@ -259,7 +259,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               SpiritRelay
             </a>
-            {" "}· Plataforma de Figurinhas
+            {" "}·{" "}
+            <a
+              href="mailto:contato@spiritrelay.com"
+              style={{ color: "#71717A", textDecoration: "none" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#A78BFA")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#71717A")}
+            >
+              contato@spiritrelay.com
+            </a>
           </p>
         </footer>
       </main>

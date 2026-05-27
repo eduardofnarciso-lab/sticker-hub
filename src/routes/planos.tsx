@@ -1212,6 +1212,15 @@ function PlanosPage() {
               Vender repetidas
             </a>
           </div>
+          <p style={{ marginTop: "1rem", fontSize: "0.8125rem", color: "#71717A" }}>
+            Dúvidas?{" "}
+            <a
+              href="mailto:contato@spiritrelay.com"
+              style={{ color: "#A78BFA", textDecoration: "none" }}
+            >
+              contato@spiritrelay.com
+            </a>
+          </p>
         </section>
       </div>
 
@@ -1240,8 +1249,14 @@ function PlanosPage() {
           style={{ color: "#A78BFA", textDecoration: "none" }}
         >
           SpiritRelay
-        </a>{" "}
-        · Marketplace de Figurinhas Avulsas
+        </a>{" "}·{" "}
+        <a
+          href="mailto:contato@spiritrelay.com"
+          style={{ color: "#71717A", textDecoration: "none" }}
+        >
+          contato@spiritrelay.com
+        </a>
+        {" "}· Marketplace de Figurinhas Avulsas
       </footer>
     </div>
   );
