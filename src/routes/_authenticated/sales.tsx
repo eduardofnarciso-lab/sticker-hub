@@ -38,6 +38,7 @@ type Order = {
     sticker_name: string | null;
     quantity: number;
     unit_price: number;
+    is_trade: boolean;
   }>;
 };
 
@@ -93,11 +94,37 @@ function OrderCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [checked, setChecked]   = useState<Record<string, boolean>>({});
+  const [tradeItems, setTradeItems] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(order.order_items.map((i) => [i.id, i.is_trade ?? false]))
+  );
+  const [togglingTrade, setTogglingTrade] = useState<string | null>(null);
+
   const isPending   = order.status === "pendente";
   const isAprovado  = order.status === "aprovado";
   const isSeparado  = order.status === "separado";
   const allChecked  = order.order_items.length > 0 &&
     order.order_items.every((item) => checked[item.id]);
+
+  // Total efetivo excluindo itens marcados como troca
+  const effectiveTotal = order.order_items.reduce((sum, item) => {
+    if (tradeItems[item.id]) return sum;
+    return sum + item.unit_price * item.quantity;
+  }, 0);
+  const hasTradeItems = Object.values(tradeItems).some(Boolean);
+
+  const toggleTrade = async (itemId: string) => {
+    const newValue = !tradeItems[itemId];
+    setTradeItems((prev) => ({ ...prev, [itemId]: newValue }));
+    setTogglingTrade(itemId);
+    try {
+      await supabase.from("order_items").update({ is_trade: newValue }).eq("id", itemId);
+    } catch {
+      // reverte se falhar
+      setTradeItems((prev) => ({ ...prev, [itemId]: !newValue }));
+    } finally {
+      setTogglingTrade(null);
+    }
+  };
 
   return (
     <div className="rounded-2xl p-4 transition-all duration-200"
@@ -140,11 +167,26 @@ function OrderCard({
             )}
           </div>
         </div>
-        {order.total_value > 0 && (
-          <div className="text-right shrink-0 font-bold text-sm" style={{ color: "#22D3EE" }}>
-            {brl(order.total_value)}
-          </div>
-        )}
+        <div className="text-right shrink-0">
+          {hasTradeItems && order.total_value > 0 && (
+            <div className="text-[11px] line-through" style={{ color: "#71717A" }}>
+              {brl(order.total_value)}
+            </div>
+          )}
+          {effectiveTotal > 0 ? (
+            <div className="font-bold text-sm" style={{ color: "#22D3EE" }}>
+              {brl(effectiveTotal)}
+            </div>
+          ) : hasTradeItems ? (
+            <div className="text-[11px] font-bold" style={{ color: "#22C55E" }}>
+              ⇄ Troca total
+            </div>
+          ) : order.total_value > 0 ? (
+            <div className="font-bold text-sm" style={{ color: "#22D3EE" }}>
+              {brl(order.total_value)}
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {/* Itens */}
@@ -205,8 +247,30 @@ function OrderCard({
                 textDecoration: checked[item.id] ? "line-through" : "none",
               }}>{item.sticker_name}</span>
               <span className="shrink-0 font-medium" style={{ color: "#E4E4E7" }}>×{item.quantity}</span>
-              {item.unit_price > 0 && (
+              {item.unit_price > 0 && !tradeItems[item.id] && (
                 <span className="shrink-0" style={{ color: "#71717A" }}>{brl(item.unit_price * item.quantity)}</span>
+              )}
+              {(isAprovado || isSeparado) && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleTrade(item.id); }}
+                  disabled={togglingTrade === item.id}
+                  className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-lg transition-all"
+                  style={{
+                    background: tradeItems[item.id]
+                      ? "rgba(245,158,11,0.2)"
+                      : "rgba(255,255,255,0.05)",
+                    color: tradeItems[item.id] ? "#F59E0B" : "#52525B",
+                    border: tradeItems[item.id]
+                      ? "1px solid rgba(245,158,11,0.35)"
+                      : "1px solid rgba(255,255,255,0.08)",
+                    opacity: togglingTrade === item.id ? 0.5 : 1,
+                  }}
+                >
+                  ⇄ troca
+                </button>
+              )}
+              {!isAprovado && !isSeparado && tradeItems[item.id] && (
+                <span className="shrink-0 text-[10px] font-bold" style={{ color: "#F59E0B" }}>⇄ troca</span>
               )}
             </div>
           ))}
@@ -299,7 +363,7 @@ function OrdersSection({ userId }: { userId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("*, order_items(id, sticker_code, sticker_name, quantity, unit_price)")
+        .select("*, order_items(id, sticker_code, sticker_name, quantity, unit_price, is_trade)")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -710,70 +774,4 @@ function NewSaleDialog({
 
       toast.success("Venda registrada!");
       onSaved();
-      onOpenChange(false);
-      setStickerId(""); setQuantity(1); setSalePrice(0); setBuyerName("");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao salvar venda");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Nova venda manual</DialogTitle></DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>Figurinha *</Label>
-            <Select value={stickerId} onValueChange={(v) => {
-              setStickerId(v);
-              const s = stickers.find((x) => x.id === v);
-              if (s) setSalePrice(Number(s.price));
-            }}>
-              <SelectTrigger><SelectValue placeholder="Selecione a figurinha" /></SelectTrigger>
-              <SelectContent>
-                {stickers.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.code ? `${s.code} — ` : ""}{s.name} ({s.quantity} em estoque)
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Quantidade</Label>
-              <Input type="number" min={1} max={sel?.quantity ?? 1} value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))} required />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Valor unitário (R$)</Label>
-              <Input type="number" min={0} step="0.01" value={salePrice}
-                onChange={(e) => setSalePrice(Number(e.target.value))} required />
-            </div>
-          </div>
-          {sel && quantity > 0 && salePrice > 0 && (
-            <div className="p-3 rounded-xl text-sm font-semibold"
-              style={{
-                background: "rgba(34,211,238,0.1)",
-                border: "1px solid rgba(34,211,238,0.2)",
-                color: "#22D3EE",
-              }}
-            >
-              Total: {brl(salePrice * quantity)}
-            </div>
-          )}
-          <div className="space-y-1.5">
-            <Label>Comprador (opcional)</Label>
-            <Input value={buyerName} onChange={(e) => setBuyerName(e.target.value)} placeholder="Nome do comprador" />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" disabled={loading}>{loading ? "Salvando..." : "Registrar venda"}</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
+      onOpenCh
