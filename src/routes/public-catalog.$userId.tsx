@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { brl, fmtCode, fmtName, discountLabel, sellerStickerPrice, volumeDiscountedPrice, isPromoActive, type SellerPricing } from "@/lib/format";
+import { brl, fmtCode, fmtName, stickerPrice, discountedPrice, discountLabel } from "@/lib/format";
 import { flagUrl, getAllSections } from "@/lib/copa2026Data";
 
 // Mapa teamCode → posição no álbum (calculado uma vez no módulo)
@@ -156,7 +156,7 @@ function PublicCatalog() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("display_name, whatsapp, base_price, promo_pct, promo_expires_at")
+        .select("display_name, whatsapp")
         .eq("id", userId)
         .maybeSingle();
       return data;
@@ -270,9 +270,9 @@ function PublicCatalog() {
   );
   const cartTotal    = cart.reduce((acc, i) => acc + i.qty, 0);
   // Preço cheio (sem desconto) para mostrar economia
-  const cartFull     = cart.reduce((acc, i) => acc + i.qty * unitPrice(i.code), 0);
+  const cartFull     = cart.reduce((acc, i) => acc + i.qty * stickerPrice(i.code), 0);
   // Preço com desconto por volume aplicado
-  const cartValue    = cart.reduce((acc, i) => acc + i.qty * finalPrice(i.code, cartTotal), 0);
+  const cartValue    = cart.reduce((acc, i) => acc + i.qty * discountedPrice(i.code, cartTotal), 0);
   const cartDiscount = discountLabel(cartTotal);
   const cartSaving   = cartFull - cartValue;
 
@@ -329,7 +329,7 @@ function PublicCatalog() {
           code:   s.code ?? "",
           name:   s.name,
           team:   s.team ?? "",
-          price:  unitPrice(s.code),
+          price:  stickerPrice(s.code),
           qty:    1,
           maxQty: avail,
         },
@@ -410,7 +410,7 @@ function PublicCatalog() {
           sticker_code: c.code,
           sticker_name: c.name,
           quantity:     c.qty,
-          unit_price:   finalPrice(c.code, cartTotal), // preço com desconto
+          unit_price:   discountedPrice(c.code, cartTotal), // preço com desconto
         })),
       });
       if (error) throw error;
@@ -451,19 +451,6 @@ function PublicCatalog() {
 
   const sellerName = seller?.display_name ?? "Vendedor";
 
-  // Configuracao de preco do vendedor
-  const pricing: SellerPricing = {
-    base_price:       (seller as any)?.base_price       ?? 1.00,
-    promo_pct:        (seller as any)?.promo_pct        ?? 0,
-    promo_expires_at: (seller as any)?.promo_expires_at ?? null,
-  };
-  const promoAtiva = isPromoActive(pricing);
-
-  // Funcao de preco unitario para este vendedor
-  const unitPrice = (code: string | null | undefined) =>
-    sellerStickerPrice(code, pricing);
-  const finalPrice = (code: string | null | undefined, totalQty: number) =>
-    volumeDiscountedPrice(unitPrice(code), totalQty);
 
   // ── SEO dinâmico por vendedor ─────────────────────────────────────────────
   useEffect(() => {
@@ -686,27 +673,6 @@ function PublicCatalog() {
           </div>
         </div>
 
-        {/* ── Banner de promoção ativa ── */}
-        {promoAtiva && (
-          <div className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
-            style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)" }}>
-            <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 text-white font-black text-sm"
-              style={{ background: "linear-gradient(135deg,#F59E0B,#EF4444)" }}>
-              %
-            </div>
-            <div className="min-w-0">
-              <div className="text-xs font-bold leading-tight" style={{ color: "#F59E0B" }}>
-                PROMOCAO — {pricing.promo_pct}% de desconto!
-              </div>
-              <div className="text-[11px]" style={{ color: "#D97706" }}>
-                {pricing.promo_expires_at
-                  ? `Valida ate ${new Date(pricing.promo_expires_at).toLocaleDateString("pt-BR")}`
-                  : "Aproveite enquanto dura!"}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ── Busca + Botão Wishlist ── */}
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -845,7 +811,7 @@ function PublicCatalog() {
                     {items.map((s) => {
                       const inCart = cart.find((c) => c.id === s.id);
                       const avail  = availableQty(s);
-                      const price  = unitPrice(s.code);
+                      const price  = stickerPrice(s.code);
                       const esgotado = avail <= 0 && !inCart;
 
                       return (
@@ -875,7 +841,7 @@ function PublicCatalog() {
                             <div className="text-sm truncate">{fmtName(s.name)}</div>
                             <div className="flex items-center gap-2 mt-0.5">
                               {(() => {
-                                const dprice = finalPrice(s.code, cartTotal);
+                                const dprice = discountedPrice(s.code, cartTotal);
                                 return (
                                   <>
                                     <span className="text-xs font-bold text-green-700">{brl(dprice)}</span>
@@ -978,7 +944,7 @@ function PublicCatalog() {
                 [...cart].sort((a, b) => a.code.localeCompare(b.code)).map((item) => {
                   const teamCode = teamCodeFromSticker(item.code);
                   const flag     = flagUrl(teamCode);
-                  const unitPrice = finalPrice(item.code, cartTotal);
+                  const unitPrice = discountedPrice(item.code, cartTotal);
                   const subtotal  = unitPrice * item.qty;
                   return (
                     <div
