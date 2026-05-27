@@ -345,22 +345,21 @@ function PublicCatalog() {
     const wishCodes = parseWishlist(wishlistText);
     if (wishCodes.length === 0) { toast.error("Nenhum código reconhecido na lista."); return; }
 
-    // Mapa de stickers disponíveis por código normalizado
+    // Mapa de stickers disponíveis — normalizado sem separadores (MEX2, FWC00, etc.)
+    const normalize = (c: string) => c.toUpperCase().replace(/[-\s]/g, "").trim();
     const byCode = new Map(
-      stickers.map((s) => [
-        (s.code ?? "").toUpperCase().trim(),
-        s,
-      ])
+      stickers.map((s) => [normalize(s.code ?? ""), s])
     );
 
     const added: string[] = [];
     const notFound: string[] = [];
 
-    for (const code of wishCodes) {
+    for (const rawCode of wishCodes) {
+      const code = normalize(rawCode);
       const s = byCode.get(code);
-      if (!s) { notFound.push(code); continue; }
+      if (!s) { notFound.push(rawCode); continue; }
       const available = (s.quantity ?? 0) - (reservedMap.get(s.id) ?? 0);
-      if (available <= 0) { notFound.push(code); continue; }
+      if (available <= 0) { notFound.push(rawCode); continue; }
       const alreadyInCart = cart.find((c) => c.id === s.id);
       if (!alreadyInCart) {
         await addToCart(s);
