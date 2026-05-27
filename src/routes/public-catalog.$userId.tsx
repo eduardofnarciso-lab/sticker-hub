@@ -934,54 +934,80 @@ function PublicCatalog() {
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1">
+            <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
               {cart.length === 0 ? (
                 <div className="text-center py-10 text-muted-foreground text-sm">
                   Carrinho vazio
                 </div>
               ) : (
-                [...cart].sort((a, b) => a.code.localeCompare(b.code)).map((item) => (
-                  <div key={item.id} className="flex items-center gap-2 py-1.5">
-                    <span className="font-mono text-xs font-bold bg-muted px-2 py-1 rounded w-14 text-center shrink-0">
-                      {fmtCode(item.code)}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm truncate">{fmtName(item.name)}</div>
-                      {item.price > 0 && (
-                        <div className="text-xs text-muted-foreground">
-                          {brl(discountedPrice(item.code, cartTotal))} × {item.qty} ={" "}
-                          <span className="font-semibold text-green-700">
-                            {brl(discountedPrice(item.code, cartTotal) * item.qty)}
+                [...cart].sort((a, b) => a.code.localeCompare(b.code)).map((item) => {
+                  const teamCode = teamCodeFromSticker(item.code);
+                  const flag     = flagUrl(teamCode);
+                  const unitPrice = discountedPrice(item.code, cartTotal);
+                  const subtotal  = unitPrice * item.qty;
+                  return (
+                    <div
+                      key={item.id}
+                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem" }}
+                      className="flex items-center gap-3 px-3 py-2.5"
+                    >
+                      {/* Bandeira + código */}
+                      <div className="flex flex-col items-center gap-1 shrink-0 w-12">
+                        {flag
+                          ? <img src={flag} alt={teamCode} className="w-7 h-5 object-cover rounded-sm" />
+                          : <div className="w-7 h-5 rounded-sm bg-muted/60" />
+                        }
+                        <span
+                          className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded text-center leading-none"
+                          style={{ background: "rgba(139,92,246,0.2)", color: "#C4B5FD" }}
+                        >
+                          {fmtCode(item.code)}
+                        </span>
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-white truncate leading-tight">
+                          {fmtName(item.name)}
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: "#71717A" }}>
+                          {brl(unitPrice)} × {item.qty}
+                          {" = "}
+                          <span className="font-bold" style={{ color: "#4ADE80" }}>
+                            {brl(subtotal)}
                           </span>
                         </div>
-                      )}
+                      </div>
+
+                      {/* Controles de quantidade */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          className="h-7 w-7 flex items-center justify-center rounded-lg transition-colors"
+                          style={{ background: "rgba(239,68,68,0.12)", color: "#F87171" }}
+                          onClick={() => item.qty === 1 ? removeFromCart(item.id) : changeQty(item.id, -1)}
+                        >
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <span className="w-6 text-center text-sm font-bold text-white">{item.qty}</span>
+                        <button
+                          className="h-7 w-7 flex items-center justify-center rounded-lg transition-colors disabled:opacity-30"
+                          style={{ background: "rgba(34,197,94,0.12)", color: "#4ADE80" }}
+                          disabled={item.qty >= item.maxQty}
+                          onClick={() => changeQty(item.id, 1)}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </button>
+                        <button
+                          className="h-7 w-7 flex items-center justify-center rounded-lg ml-0.5 transition-colors"
+                          style={{ background: "rgba(239,68,68,0.08)", color: "#F87171" }}
+                          onClick={() => removeFromCart(item.id)}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-0.5 shrink-0">
-                      <button
-                        className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted text-red-500"
-                        onClick={() =>
-                          item.qty === 1 ? removeFromCart(item.id) : changeQty(item.id, -1)
-                        }
-                      >
-                        <Minus className="h-3 w-3" />
-                      </button>
-                      <span className="w-6 text-center text-sm font-bold">{item.qty}</span>
-                      <button
-                        className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted text-green-600 disabled:opacity-30"
-                        disabled={item.qty >= item.maxQty}
-                        onClick={() => changeQty(item.id, 1)}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </button>
-                      <button
-                        className="h-7 w-7 flex items-center justify-center rounded hover:bg-red-50 text-red-400 ml-1"
-                        onClick={() => removeFromCart(item.id)}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
