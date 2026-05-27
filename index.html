@@ -3,11 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Figu</title>
+    <title>Figu — Marketplace de figurinhas avulsas</title>
+
+    <!-- Favicon & PWA -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <meta name="theme-color" content="#0B1020" />
-    <meta name="description" content="Figu · Plataforma de Figurinhas Copa 2026" />
+
+    <!-- SEO base -->
+    <meta name="description" content="Compre, venda e encontre figurinhas avulsas para completar seu álbum sem gastar com pacotinhos repetidos. Marketplace de figurinhas." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://figu.spiritrelay.com/" />
+
+    <!-- Open Graph base (sobrescrito por rota) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Figu" />
+    <meta property="og:image" content="https://figu.spiritrelay.com/og.svg" />
+    <meta property="og:locale" content="pt_BR" />
+
+    <!-- Twitter base -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://figu.spiritrelay.com/og.svg" />
+
+    <!-- Performance: preconnect para recursos externos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://supabase.co" />
+
+    <!-- Preload do script principal -->
+    <link rel="modulepreload" href="/src/client.tsx" />
   </head>
   <body>
     <div id="root"></div>

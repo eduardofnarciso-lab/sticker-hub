@@ -32,6 +32,10 @@ export const Route = createFileRoute("/planos")({
       { property: "og:url", content: "https://figu.spiritrelay.com/planos" },
       { property: "og:site_name", content: "Figu" },
       { property: "og:locale", content: "pt_BR" },
+      { property: "og:image", content: "https://figu.spiritrelay.com/og.svg" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Figu — Marketplace de figurinhas avulsas" },
       // Twitter Cards
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Comprar e vender figurinhas avulsas | Figu" },
@@ -40,6 +44,7 @@ export const Route = createFileRoute("/planos")({
         content:
           "Compre, venda e encontre figurinhas avulsas para completar seu álbum sem gastar com pacotinhos repetidos.",
       },
+      { name: "twitter:image", content: "https://figu.spiritrelay.com/og.svg" },
     ],
     links: [
       { rel: "canonical", href: "https://figu.spiritrelay.com/planos" },
@@ -140,8 +145,8 @@ const BENEFICIOS = [
   },
   {
     icon: Trophy,
-    titulo: "Especialistas Copa 2026",
-    descricao: "Catálogo completo de figurinhas da Copa 2026. Complete seu álbum com quem entende.",
+    titulo: "Pokémon, TCG e mais",
+    descricao: "Plataforma escalável para qualquer coleção: Copa, Pokémon, TCG, cards e muito mais.",
     color: "#34D399",
   },
 ];
@@ -369,7 +374,7 @@ function PlanosPage() {
             }}
           >
             <Star style={{ height: "14px", width: "14px" }} />
-            Marketplace de figurinhas avulsas · Copa 2026
+            Marketplace de figurinhas avulsas
           </div>
 
           <h1
@@ -439,7 +444,7 @@ function PlanosPage() {
               }}
             >
               <Search style={{ height: "18px", width: "18px" }} />
-              Encontrar minhas figurinhas
+              Encontrar figurinhas
             </a>
             <a
               href={`https://wa.me/${WHATSAPP}?text=${WA_VENDER}`}
@@ -556,6 +561,55 @@ function PlanosPage() {
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        {/* ── PROVA SOCIAL ─────────────────────────────────────── */}
+        <section aria-label="Números da plataforma Figu">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: "1rem",
+            }}
+          >
+            {[
+              { valor: "+10.000", label: "buscas realizadas", color: "#60A5FA" },
+              { valor: "+50.000", label: "figurinhas cadastradas", color: "#8B5CF6" },
+              { valor: "+1.000", label: "colecionadores ativos", color: "#22D3EE" },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                style={{
+                  borderRadius: "1rem",
+                  padding: "1.5rem 1rem",
+                  background: "rgba(21,27,46,0.5)",
+                  backdropFilter: "blur(12px)",
+                  border: `1px solid ${stat.color}25`,
+                  boxShadow: `0 0 28px ${stat.color}12`,
+                  textAlign: "center",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.375rem",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "2rem",
+                    fontWeight: 900,
+                    color: stat.color,
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1,
+                    textShadow: `0 0 20px ${stat.color}60`,
+                  }}
+                >
+                  {stat.valor}
+                </div>
+                <div style={{ fontSize: "0.8125rem", color: "#A1A1AA" }}>
+                  {stat.label}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -1124,6 +1178,74 @@ function PlanosPage() {
                 alignItems: "center",
                 gap: "0.5rem",
                 background: "linear-gradient(135deg, #8B5CF6, #60A5FA)",
+                color: "#fff",
+                fontWeight: 700,
+                padding: "0.875rem 1.75rem",
+                borderRadius: "0.875rem",
+                textDecoration: "none",
+                fontSize: "0.9375rem",
+                boxShadow: "0 0 24px rgba(139,92,246,0.35)",
+              }}
+            >
+              <MessageCircle style={{ height: "20px", width: "20px" }} />
+              Começar agora
+            </a>
+            <a
+              href={`https://wa.me/${WHATSAPP}?text=${WA_VENDER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                background: "rgba(255,255,255,0.06)",
+                color: "#E4E4E7",
+                fontWeight: 600,
+                padding: "0.875rem 1.75rem",
+                borderRadius: "0.875rem",
+                textDecoration: "none",
+                fontSize: "0.9375rem",
+                border: "1px solid rgba(255,255,255,0.12)",
+              }}
+            >
+              <RefreshCw style={{ height: "20px", width: "20px" }} />
+              Vender repetidas
+            </a>
+          </div>
+        </section>
+      </div>
+
+      {/* ── Footer ─────────────────────────────────────────────── */}
+      <footer
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: "rgba(11,16,32,0.9)",
+          backdropFilter: "blur(16px)",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          padding: "0.5rem 1rem",
+          textAlign: "center",
+          fontSize: "0.625rem",
+          color: "#52525B",
+          zIndex: 10,
+        }}
+      >
+        Desenvolvido por{" "}
+        <a
+          href="https://spiritrelay.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#A78BFA", textDecoration: "none" }}
+        >
+          SpiritRelay
+        </a>{" "}
+        · Marketplace de Figurinhas Avulsas
+      </footer>
+    </div>
+  );
+}
                 color: "#fff",
                 fontWeight: 700,
                 padding: "0.875rem 1.75rem",

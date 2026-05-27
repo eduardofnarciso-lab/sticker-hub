@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as FigurinhaNumeroRouteImport } from './routes/figurinha.$numero'
+import { Route as ComprarFigurinhaRouteImport } from './routes/comprar.$figurinha'
 import { Route as PlanosRouteImport } from './routes/planos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -24,6 +26,16 @@ import { Route as AuthenticatedAlbumsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedStockHistoryRouteImport } from './routes/_authenticated/stock-history'
 
+const FigurinhaNumeroRoute = FigurinhaNumeroRouteImport.update({
+  id: '/figurinha/$numero',
+  path: '/figurinha/$numero',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComprarFigurinhaRoute = ComprarFigurinhaRouteImport.update({
+  id: '/comprar/$figurinha',
+  path: '/comprar/$figurinha',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlanosRoute = PlanosRouteImport.update({
   id: '/planos',
   path: '/planos',
@@ -108,6 +120,8 @@ export interface FileRoutesByFullPath {
   '/stock': typeof AuthenticatedStockRoute
   '/stock-history': typeof AuthenticatedStockHistoryRoute
   '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
+  '/figurinha/$numero': typeof FigurinhaNumeroRoute
+  '/comprar/$figurinha': typeof ComprarFigurinhaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -123,6 +137,8 @@ export interface FileRoutesByTo {
   '/stock': typeof AuthenticatedStockRoute
   '/stock-history': typeof AuthenticatedStockHistoryRoute
   '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
+  '/figurinha/$numero': typeof FigurinhaNumeroRoute
+  '/comprar/$figurinha': typeof ComprarFigurinhaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -140,6 +156,8 @@ export interface FileRoutesById {
   '/_authenticated/stock': typeof AuthenticatedStockRoute
   '/_authenticated/stock-history': typeof AuthenticatedStockHistoryRoute
   '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
+  '/figurinha/$numero': typeof FigurinhaNumeroRoute
+  '/comprar/$figurinha': typeof ComprarFigurinhaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -157,6 +175,8 @@ export interface FileRouteTypes {
     | '/stock'
     | '/stock-history'
     | '/public-catalog/$userId'
+    | '/figurinha/$numero'
+    | '/comprar/$figurinha'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -172,6 +192,8 @@ export interface FileRouteTypes {
     | '/stock'
     | '/stock-history'
     | '/public-catalog/$userId'
+    | '/figurinha/$numero'
+    | '/comprar/$figurinha'
   id:
     | '__root__'
     | '/'
@@ -188,6 +210,8 @@ export interface FileRouteTypes {
     | '/_authenticated/stock'
     | '/_authenticated/stock-history'
     | '/public-catalog/$userId'
+    | '/figurinha/$numero'
+    | '/comprar/$figurinha'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -196,6 +220,8 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PlanosRoute: typeof PlanosRoute
   PublicCatalogUserIdRoute: typeof PublicCatalogUserIdRoute
+  FigurinhaNumeroRoute: typeof FigurinhaNumeroRoute
+  ComprarFigurinhaRoute: typeof ComprarFigurinhaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -233,6 +259,20 @@ declare module '@tanstack/react-router' {
       path: '/public-catalog/$userId'
       fullPath: '/public-catalog/$userId'
       preLoaderRoute: typeof PublicCatalogUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/figurinha/$numero': {
+      id: '/figurinha/$numero'
+      path: '/figurinha/$numero'
+      fullPath: '/figurinha/$numero'
+      preLoaderRoute: typeof FigurinhaNumeroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/comprar/$figurinha': {
+      id: '/comprar/$figurinha'
+      path: '/comprar/$figurinha'
+      fullPath: '/comprar/$figurinha'
+      preLoaderRoute: typeof ComprarFigurinhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/stock': {
@@ -335,6 +375,8 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PlanosRoute: PlanosRoute,
   PublicCatalogUserIdRoute: PublicCatalogUserIdRoute,
+  FigurinhaNumeroRoute: FigurinhaNumeroRoute,
+  ComprarFigurinhaRoute: ComprarFigurinhaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
