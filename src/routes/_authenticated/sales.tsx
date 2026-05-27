@@ -774,4 +774,70 @@ function NewSaleDialog({
 
       toast.success("Venda registrada!");
       onSaved();
-      onOpenCh
+      onOpenChange(false);
+      setStickerId(""); setQuantity(1); setSalePrice(0); setBuyerName("");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao salvar venda");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Nova venda manual</DialogTitle></DialogHeader>
+        <form onSubmit={submit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Figurinha *</Label>
+            <Select value={stickerId} onValueChange={(v) => {
+              setStickerId(v);
+              const s = stickers.find((x) => x.id === v);
+              if (s) setSalePrice(Number(s.price));
+            }}>
+              <SelectTrigger><SelectValue placeholder="Selecione a figurinha" /></SelectTrigger>
+              <SelectContent>
+                {stickers.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.code ? `${s.code} — ` : ""}{s.name} ({s.quantity} em estoque)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Quantidade</Label>
+              <Input type="number" min={1} max={sel?.quantity ?? 1} value={quantity}
+                onChange={(e) => setQuantity(Number(e.target.value))} required />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Valor unitário (R$)</Label>
+              <Input type="number" min={0} step="0.01" value={salePrice}
+                onChange={(e) => setSalePrice(Number(e.target.value))} required />
+            </div>
+          </div>
+          {sel && quantity > 0 && salePrice > 0 && (
+            <div className="p-3 rounded-xl text-sm font-semibold"
+              style={{
+                background: "rgba(34,211,238,0.1)",
+                border: "1px solid rgba(34,211,238,0.2)",
+                color: "#22D3EE",
+              }}
+            >
+              Total: {brl(salePrice * quantity)}
+            </div>
+          )}
+          <div className="space-y-1.5">
+            <Label>Comprador (opcional)</Label>
+            <Input value={buyerName} onChange={(e) => setBuyerName(e.target.value)} placeholder="Nome do comprador" />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="submit" disabled={loading}>{loading ? "Salvando..." : "Registrar venda"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
