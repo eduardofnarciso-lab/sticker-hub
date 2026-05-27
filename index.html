@@ -32,6 +32,19 @@
 
     <!-- Preload do script principal -->
     <link rel="modulepreload" href="/src/client.tsx" />
+
+    <!-- Organization Schema global -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Figu",
+      "description": "Marketplace de compra e venda de figurinhas avulsas.",
+      "url": "https://figu.spiritrelay.com",
+      "logo": "https://figu.spiritrelay.com/favicon.svg",
+      "sameAs": []
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

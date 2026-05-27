@@ -451,6 +451,75 @@ function PublicCatalog() {
 
   const sellerName = seller?.display_name ?? "Vendedor";
 
+  // ── SEO dinâmico por vendedor ─────────────────────────────────────────────
+  useEffect(() => {
+    const name    = seller?.display_name ?? null;
+    const title   = name
+      ? `Figurinhas de ${name} — Compre avulsas | Figu`
+      : "Catálogo de figurinhas avulsas | Figu";
+    const desc    = name
+      ? `Compre figurinhas avulsas diretamente de ${name}. Figurinhas Copa 2026 e outras coleções com entrega rápida via WhatsApp.`
+      : "Compre figurinhas avulsas de colecionadores. Catálogo com estoque atualizado, entrega via WhatsApp.";
+    const canonical = `https://figu.spiritrelay.com/public-catalog/${userId}`;
+
+    document.title = title;
+
+    const setMeta = (sel: string, attr: string, val: string) => {
+      let el = document.querySelector(sel) as HTMLMetaElement | null;
+      if (!el) { el = document.createElement("meta"); document.head.appendChild(el); }
+      el.setAttribute(attr, val.split(attr === "property" ? "=" : "=")[0]);
+      // set correct attribute
+      el.setAttribute(attr, sel.includes("property") ? sel.match(/property="([^"]+)"/)![1] : sel.match(/name="([^"]+)"/)![1]);
+      el.setAttribute("content", val);
+    };
+
+    // helper limpo
+    const meta = (selector: string, content: string) => {
+      let el = document.querySelector(selector) as HTMLMetaElement | null;
+      if (!el) {
+        el = document.createElement("meta");
+        const m = selector.match(/\[(\w+)="([^"]+)"\]/);
+        if (m) el.setAttribute(m[1], m[2]);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+
+    meta('meta[name="description"]', desc);
+    meta('meta[name="robots"]', "index, follow");
+    meta('meta[property="og:title"]', title);
+    meta('meta[property="og:description"]', desc);
+    meta('meta[property="og:url"]', canonical);
+    meta('meta[property="og:type"]', "website");
+
+    let can = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!can) { can = document.createElement("link"); can.setAttribute("rel", "canonical"); document.head.appendChild(can); }
+    can.setAttribute("href", canonical);
+
+    // JSON-LD WebPage
+    const removeScript = (id: string) => document.getElementById(id)?.remove();
+    removeScript("figu-catalog-schema");
+    const script = document.createElement("script");
+    script.id = "figu-catalog-schema";
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": title,
+      "description": desc,
+      "url": canonical,
+      "isPartOf": { "@type": "WebSite", "name": "Figu", "url": "https://figu.spiritrelay.com" },
+      ...(name ? { "author": { "@type": "Person", "name": name } } : {}),
+    });
+    document.head.appendChild(script);
+
+    return () => {
+      removeScript("figu-catalog-schema");
+      document.title = "Figu — Marketplace de figurinhas avulsas";
+    };
+  }, [seller, userId]);
+
+
   // ── Render ──────────────────────────────────────────────────────────────────
   // ── Tela de sucesso com link WhatsApp ────────────────────────────────────────
   if (waUrl) {
@@ -836,8 +905,8 @@ function PublicCatalog() {
       {/* ── Carrinho — bottom sheet ── */}
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex flex-col">
-          <div className="flex-1" onClick={() => setCartOpen(false)} />
-          <div className="bg-card rounded-t-2xl shadow-2xl max-h-[85vh] flex flex-col">
+          <div className="flex-1 bg-black/30" onClick={() => setCartOpen(false)} />
+          <div className="rounded-t-2xl shadow-2xl max-h-[85vh] flex flex-col" style={{ background: "#0F1629", borderTop: "1px solid rgba(139,92,246,0.2)" }}>
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <div className="font-semibold">
                 Carrinho · {cartTotal} figurinha{cartTotal !== 1 ? "s" : ""}

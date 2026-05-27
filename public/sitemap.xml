@@ -4,7 +4,15 @@
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
-  <!-- Página principal de conversão -->
+  <!-- Página principal -->
+  <url>
+    <loc>https://figu.spiritrelay.com/</loc>
+    <lastmod>2026-05-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Landing page de conversão — maior prioridade SEO -->
   <url>
     <loc>https://figu.spiritrelay.com/planos</loc>
     <lastmod>2026-05-27</lastmod>
@@ -12,11 +20,12 @@
     <priority>1.0</priority>
   </url>
 
-  <!-- Futura: SEO programático por figurinha/número -->
-  <!-- <url>
-    <loc>https://figu.spiritrelay.com/figurinha/1</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url> -->
+  <!-- Nota: catálogos públicos (/public-catalog/$userId) são indexáveis
+       mas os IDs são UUIDs gerados dinamicamente — não listados aqui.
+       O Google os descobre via links compartilhados pelos vendedores.
+       Quando houver sitemap dinâmico gerado pelo backend, adicionar aqui. -->
+
+  <!-- Rotas /figurinha/$numero e /comprar/$figurinha têm noindex temporário
+       até terem conteúdo real do Supabase. Não incluir no sitemap por ora. -->
 
 </urlset>

@@ -17,6 +17,7 @@
  */
 
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/figurinha/$numero")({
@@ -24,6 +25,14 @@ export const Route = createFileRoute("/figurinha/$numero")({
 });
 
 function FigurinhaPage() {
+  // Página em construção: noindex temporário até ter conteúdo real
+  useEffect(() => {
+    let el = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+    if (!el) { el = document.createElement("meta"); el.setAttribute("name", "robots"); document.head.appendChild(el); }
+    el.setAttribute("content", "noindex, nofollow");
+    return () => { el?.setAttribute("content", "index, follow"); };
+  }, []);
+
   const { numero } = Route.useParams();
 
   return (

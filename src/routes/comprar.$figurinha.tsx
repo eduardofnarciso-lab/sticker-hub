@@ -16,6 +16,7 @@
  */
 
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Search, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/comprar/$figurinha")({
@@ -23,6 +24,14 @@ export const Route = createFileRoute("/comprar/$figurinha")({
 });
 
 function ComprarPage() {
+  // Página em construção: noindex temporário até ter conteúdo real
+  useEffect(() => {
+    let el = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+    if (!el) { el = document.createElement("meta"); el.setAttribute("name", "robots"); document.head.appendChild(el); }
+    el.setAttribute("content", "noindex, nofollow");
+    return () => { el?.setAttribute("content", "index, follow"); };
+  }, []);
+
   const { figurinha } = Route.useParams();
   const WHATSAPP = "5515991460543";
 
