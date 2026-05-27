@@ -99,6 +99,32 @@ async function fetchReservedMap(): Promise<Map<string, number>> {
   return map;
 }
 
+// ─── Parser de lista de faltantes ──────────────────────────────────────────────
+function parseWishlist(text: string): string[] {
+  const codes: string[] = [];
+  for (const rawLine of text.split("\n")) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const colonMatch = line.match(/^([A-Za-z0-9]{2,5})\s*:\s*(.+)$/);
+    if (colonMatch) {
+      const team = colonMatch[1].toUpperCase();
+      const nums = colonMatch[2].split(",").map((n) => n.trim()).filter(Boolean);
+      for (const num of nums) codes.push(`${team}-${num}`);
+      continue;
+    }
+    if (line.includes(",")) {
+      for (const part of line.split(",").map((p) => p.trim()).filter(Boolean)) {
+        const m = part.match(/^([A-Za-z]{2,5})[-\s]?(\d{1,3}[A-Za-z]?)$/);
+        if (m) codes.push(`${m[1].toUpperCase()}-${m[2]}`);
+      }
+      continue;
+    }
+    const singleMatch = line.match(/^([A-Za-z]{2,5})[-\s]?(\d{1,3}[A-Za-z]?)$/);
+    if (singleMatch) codes.push(`${singleMatch[1].toUpperCase()}-${singleMatch[2]}`);
+  }
+  return [...new Set(codes)];
+}
+
 // ─── Componente ────────────────────────────────────────────────────────────────
 function PublicCatalog() {
   const { userId } = Route.useParams();
@@ -106,6 +132,9 @@ function PublicCatalog() {
   const sessionId  = useRef(getSessionId()).current;
 
   const [search,    setSearch]    = useState("");
+  const [wishlistOpen, setWishlistOpen] = useState(false);
+  const [wishlistText, setWishlistText] = useState("");
+  const [wishlistResult, setWishlistResult] = useState<{added: string[], notFound: string[]} | null>(null);
   const [cart,      setCart]      = useState<CartItem[]>([]);
   const [cartOpen,  setCartOpen]  = useState(false);
   const [buyerName,  setBuyerName]  = useState("");
@@ -309,6 +338,39 @@ function PublicCatalog() {
     }
     qc.invalidateQueries({ queryKey: ["cart-reservations"] });
     toast.success(`${fmtCode(s.code)} adicionada ao carrinho!`);
+  };
+
+  // ── Processar lista colada ─────────────────────────────────────────────────
+  const handleWishlist = async () => {
+    const wishCodes = parseWishlist(wishlistText);
+    if (wishCodes.length === 0) { toast.error("Nenhum código reconhecido na lista."); return; }
+
+    // Mapa de stickers disponíveis por código normalizado
+    const byCode = new Map(
+      stickers.map((s) => [
+        (s.code ?? "").toUpperCase().trim(),
+        s,
+      ])
+    );
+
+    const added: string[] = [];
+    const notFound: string[] = [];
+
+    for (const code of wishCodes) {
+      const s = byCode.get(code);
+      if (!s) { notFound.push(code); continue; }
+      const available = (s.quantity ?? 0) - (reservedMap.get(s.id) ?? 0);
+      if (available <= 0) { notFound.push(code); continue; }
+      const alreadyInCart = cart.find((c) => c.id === s.id);
+      if (!alreadyInCart) {
+        await addToCart(s);
+        added.push(code);
+      } else {
+        added.push(code); // já estava no carrinho, conta como ok
+      }
+    }
+
+    setWishlistResult({ added, notFound });
   };
 
   const removeFromCart = async (id: string) => {
@@ -542,16 +604,111 @@ function PublicCatalog() {
           </div>
         </div>
 
-        {/* ── Busca ── */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder="Buscar seleção ou código (BRA, MEX, FRA...)"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        {/* ── Busca + Botão Wishlist ── */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              placeholder="Buscar seleção ou código (BRA, MEX, FRA...)"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <button
+            onClick={() => { setWishlistOpen(true); setWishlistResult(null); setWishlistText(""); }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all"
+            style={{
+              background: "rgba(139,92,246,0.15)",
+              color: "#A78BFA",
+              border: "1px solid rgba(139,92,246,0.3)",
+            }}
+            title="Colar lista de faltantes"
+          >
+            📋 Colar lista
+          </button>
         </div>
+
+        {/* ── Modal Wishlist ── */}
+        {wishlistOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
+            onClick={(e) => { if (e.target === e.currentTarget) setWishlistOpen(false); }}
+          >
+            <div
+              className="w-full max-w-lg rounded-2xl p-5 space-y-4"
+              style={{ background: "#0F1629", border: "1px solid rgba(139,92,246,0.3)" }}
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-bold" style={{ color: "#E4E4E7" }}>
+                  📋 Colar lista de faltantes
+                </h2>
+                <button onClick={() => setWishlistOpen(false)} style={{ color: "#71717A" }}>✕</button>
+              </div>
+
+              <p className="text-xs" style={{ color: "#A1A1AA" }}>
+                Cole sua lista no formato do app de álbum. Exemplos aceitos:
+                <br />
+                <span style={{ color: "#A78BFA", fontFamily: "monospace" }}>
+                  FWC: 00, 2, 3, 4 &nbsp;·&nbsp; BRA: 16 &nbsp;·&nbsp; GHA-3 &nbsp;·&nbsp; GHA2
+                </span>
+              </p>
+
+              <textarea
+                className="w-full rounded-xl p-3 text-sm resize-none"
+                rows={8}
+                placeholder={"FWC: 00, 2, 3, 4\nBRA: 16\nMEX: 1, 2, 3\nGHA-3"}
+                value={wishlistText}
+                onChange={(e) => setWishlistText(e.target.value)}
+                style={{
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: "#E4E4E7",
+                  outline: "none",
+                  fontFamily: "monospace",
+                }}
+              />
+
+              {wishlistResult && (
+                <div className="rounded-xl p-3 space-y-1 text-xs"
+                  style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                  <p style={{ color: "#22C55E" }}>
+                    ✅ {wishlistResult.added.length} figurinha{wishlistResult.added.length !== 1 ? "s" : ""} adicionada{wishlistResult.added.length !== 1 ? "s" : ""} ao carrinho
+                  </p>
+                  {wishlistResult.notFound.length > 0 && (
+                    <p style={{ color: "#F59E0B" }}>
+                      ⚠️ Não encontradas ({wishlistResult.notFound.length}): {wishlistResult.notFound.slice(0, 10).join(", ")}{wishlistResult.notFound.length > 10 ? "..." : ""}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleWishlist}
+                  disabled={!wishlistText.trim()}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40"
+                  style={{
+                    background: "linear-gradient(135deg, #8B5CF6, #60A5FA)",
+                    color: "#fff",
+                  }}
+                >
+                  Adicionar ao carrinho
+                </button>
+                {wishlistResult && (
+                  <button
+                    onClick={() => setWishlistOpen(false)}
+                    className="px-4 py-2.5 rounded-xl text-sm font-semibold"
+                    style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.3)" }}
+                  >
+                    Ver carrinho
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="text-center py-16 text-muted-foreground">Carregando catálogo...</div>
