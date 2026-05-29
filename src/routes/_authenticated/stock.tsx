@@ -18,8 +18,8 @@ export const Route = createFileRoute("/_authenticated/stock")({
 function stickerPrice(code: string | null): number {
   if (!code) return 1;
   if (code === "00" || code.startsWith("FWC")) return 2;
-  // BRA1, MEX1, GER1… — letra(s) seguido exatamente de "1"
-  if (/^[A-Z]{2,3}1$/.test(code)) return 2;
+  if (/^[A-Z]{2,3}1$/.test(code)) return 2;  // Logo do time
+  if (/^[A-Z]{2,3}13$/.test(code)) return 2; // Foto da Seleção
   return 1;
 }
 
