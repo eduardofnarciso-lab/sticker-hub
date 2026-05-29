@@ -55,8 +55,4 @@ export const conditionLabel: Record<string, string> = {
   danificada: "Danificada",
 };
 
-export const statusLabel: Record<string, string> = {
-  disponivel: "Disponível",
-  vendida: "Vendida",
-  reservada: "Reservada",
-};
+export const statusLabel: Record

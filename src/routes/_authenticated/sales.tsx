@@ -18,6 +18,14 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { brl, fmtDate, fmtCode } from "@/lib/format";
+import { getAllSections } from "@/lib/copa2026Data";
+
+// Mapa teamCode → grupo Copa 2026 (calculado uma vez)
+const TEAM_GROUP: Record<string, string> = Object.fromEntries(
+  getAllSections()
+    .filter((s) => s.group !== "Intro")
+    .map((s) => [s.teamCode, s.group])
+);
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/sales")({
@@ -302,6 +310,13 @@ function OrderCard({
                   {num}
                 </span>
 
+                {/* Grupo Copa 2026 */}
+                {TEAM_GROUP[team] && (
+                  <span className="font-bold text-[9px] px-1 py-0.5 rounded shrink-0"
+                    style={{ background: "rgba(34,197,94,0.12)", color: "#4ADE80" }}>
+                    {TEAM_GROUP[team]}
+                  </span>
+                )}
                 <span className="flex-1 truncate" style={{
                   color: isChecked ? "#71717A" : "#A1A1AA",
                   textDecoration: isChecked ? "line-through" : "none",
