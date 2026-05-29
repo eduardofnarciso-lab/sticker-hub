@@ -17,7 +17,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { brl, fmtDate } from "@/lib/format";
+import { brl, fmtDate, fmtCode } from "@/lib/format";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/sales")({
@@ -102,8 +102,22 @@ function OrderCard({
   const isPending   = order.status === "pendente";
   const isAprovado  = order.status === "aprovado";
   const isSeparado  = order.status === "separado";
-  const allChecked  = order.order_items.length > 0 &&
-    order.order_items.every((item) => checked[item.id]);
+  // Linhas expandidas: qty=2 → 2 linhas separadas
+  const expandedRows = order.order_items.flatMap((item) =>
+    Array.from({ length: item.quantity }, (_, idx) => ({
+      ...item,
+      rowKey: `${item.id}_${idx}`,
+      rowIdx: idx,
+    }))
+  );
+  const allChecked = expandedRows.length > 0 && expandedRows.every((r) => checked[r.rowKey]);
+
+  // Times presentes no pedido (para mostrar grupo)
+  const teamGroups = [...new Set(
+    order.order_items
+      .map((i) => (i.sticker_code ?? "").match(/^([A-Z]+)/)?.[1] ?? "")
+      .filter(Boolean)
+  )].sort();
 
   // Total efetivo excluindo itens marcados como troca
   const effectiveTotal = order.order_items.reduce((sum, item) => {
@@ -113,14 +127,32 @@ function OrderCard({
   const hasTradeItems = Object.values(tradeItems).some(Boolean);
 
   const toggleTrade = async (itemId: string) => {
-    const newValue = !tradeItems[itemId];
-    setTradeItems((prev) => ({ ...prev, [itemId]: newValue }));
+    const newValue   = !tradeItems[itemId];
+    const newTradeMap = { ...tradeItems, [itemId]: newValue };
+    setTradeItems(newTradeMap);
     setTogglingTrade(itemId);
     try {
-      await supabase.from("order_items").update({ is_trade: newValue }).eq("id", itemId);
-    } catch {
-      // reverte se falhar
+      // 1. Salva is_trade no item
+      const { error: itemErr } = await supabase
+        .from("order_items")
+        .update({ is_trade: newValue })
+        .eq("id", itemId);
+      if (itemErr) throw itemErr;
+
+      // 2. Recalcula e salva total_value no pedido
+      const newTotal = order.order_items.reduce((sum, item) => {
+        if (newTradeMap[item.id]) return sum;
+        return sum + item.unit_price * item.quantity;
+      }, 0);
+      const { error: orderErr } = await supabase
+        .from("orders")
+        .update({ total_value: newTotal })
+        .eq("id", order.id);
+      if (orderErr) throw orderErr;
+    } catch (err) {
+      // reverte estado local se falhar
       setTradeItems((prev) => ({ ...prev, [itemId]: !newValue }));
+      console.error("Erro ao marcar troca:", err);
     } finally {
       setTogglingTrade(null);
     }
@@ -212,7 +244,7 @@ function OrderCard({
                 style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA" }}
                 onClick={() => {
                   const all: Record<string, boolean> = {};
-                  order.order_items.forEach((item) => { all[item.id] = true; });
+                  expandedRows.forEach((r) => { all[r.rowKey] = true; });
                   setChecked(all);
                 }}
               >
@@ -220,60 +252,86 @@ function OrderCard({
               </button>
             </div>
           )}
-          {order.order_items.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-2 text-xs py-0.5 cursor-pointer rounded-lg px-1 transition-all"
-              style={{ background: checked[item.id] ? "rgba(34,197,94,0.06)" : "transparent" }}
-              onClick={() => {
-                if (!isAprovado && !isSeparado) return;
-                setChecked((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
-              }}
-            >
-              {(isAprovado || isSeparado) ? (
-                checked[item.id]
-                  ? <CheckSquare className="h-4 w-4 shrink-0" style={{ color: "#22C55E" }} />
-                  : <Square className="h-4 w-4 shrink-0" style={{ color: "#71717A" }} />
-              ) : null}
-              <span className="font-mono font-bold px-1.5 py-0.5 rounded text-[10px] w-14 text-center shrink-0"
-                style={{
-                  background: checked[item.id] ? "rgba(34,197,94,0.15)" : "rgba(139,92,246,0.15)",
-                  color: checked[item.id] ? "#22C55E" : "#A78BFA",
-                }}>
-                {item.sticker_code ?? "—"}
-              </span>
-              <span className="flex-1 truncate" style={{
-                color: checked[item.id] ? "#71717A" : "#A1A1AA",
-                textDecoration: checked[item.id] ? "line-through" : "none",
-              }}>{item.sticker_name}</span>
-              <span className="shrink-0 font-medium" style={{ color: "#E4E4E7" }}>×{item.quantity}</span>
-              {item.unit_price > 0 && !tradeItems[item.id] && (
-                <span className="shrink-0" style={{ color: "#71717A" }}>{brl(item.unit_price * item.quantity)}</span>
-              )}
-              {(isPending || isAprovado) && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); toggleTrade(item.id); }}
-                  disabled={togglingTrade === item.id}
-                  className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-lg transition-all"
-                  style={{
-                    background: tradeItems[item.id]
-                      ? "rgba(245,158,11,0.2)"
-                      : "rgba(255,255,255,0.05)",
-                    color: tradeItems[item.id] ? "#F59E0B" : "#52525B",
-                    border: tradeItems[item.id]
-                      ? "1px solid rgba(245,158,11,0.35)"
-                      : "1px solid rgba(255,255,255,0.08)",
-                    opacity: togglingTrade === item.id ? 0.5 : 1,
-                  }}
-                >
-                  ⇄ troca
-                </button>
-              )}
-              {!isAprovado && !isSeparado && tradeItems[item.id] && (
-                <span className="shrink-0 text-[10px] font-bold" style={{ color: "#F59E0B" }}>⇄ troca</span>
-              )}
+          {/* Times do pedido */}
+          {teamGroups.length > 0 && (
+            <div className="text-[10px] mb-1 flex flex-wrap gap-1">
+              {teamGroups.map((t) => (
+                <span key={t} className="px-1.5 py-0.5 rounded font-mono font-bold"
+                  style={{ background: "rgba(96,165,250,0.12)", color: "#60A5FA" }}>
+                  {t}
+                </span>
+              ))}
             </div>
-          ))}
+          )}
+
+          {/* Uma linha por unidade física */}
+          {expandedRows.map((row) => {
+            const isChecked = !!checked[row.rowKey];
+            const code = row.sticker_code ?? "—";
+            const team = code.match(/^([A-Z]+)/)?.[1] ?? code;
+            const num  = code.match(/(\d+[A-Za-z]?)$/)?.[1] ?? "";
+            return (
+              <div
+                key={row.rowKey}
+                className="flex items-center gap-2 text-xs py-0.5 cursor-pointer rounded-lg px-1 transition-all"
+                style={{ background: isChecked ? "rgba(34,197,94,0.06)" : "transparent" }}
+                onClick={() => {
+                  if (!isAprovado && !isSeparado) return;
+                  setChecked((prev) => ({ ...prev, [row.rowKey]: !prev[row.rowKey] }));
+                }}
+              >
+                {(isAprovado || isSeparado) ? (
+                  isChecked
+                    ? <CheckSquare className="h-4 w-4 shrink-0" style={{ color: "#22C55E" }} />
+                    : <Square className="h-4 w-4 shrink-0" style={{ color: "#71717A" }} />
+                ) : null}
+
+                {/* Time separado do número */}
+                <span className="font-mono font-bold px-1.5 py-0.5 rounded text-[10px] shrink-0"
+                  style={{
+                    background: isChecked ? "rgba(34,197,94,0.15)" : "rgba(139,92,246,0.15)",
+                    color: isChecked ? "#22C55E" : "#A78BFA",
+                  }}>
+                  {team}
+                </span>
+                <span className="font-mono font-bold px-1.5 py-0.5 rounded text-[10px] shrink-0"
+                  style={{
+                    background: isChecked ? "rgba(34,197,94,0.10)" : "rgba(96,165,250,0.12)",
+                    color: isChecked ? "#22C55E" : "#60A5FA",
+                  }}>
+                  {num}
+                </span>
+
+                <span className="flex-1 truncate" style={{
+                  color: isChecked ? "#71717A" : "#A1A1AA",
+                  textDecoration: isChecked ? "line-through" : "none",
+                }}>{row.sticker_name}</span>
+
+                {/* Preço + troca apenas na 1ª linha do item */}
+                {row.rowIdx === 0 && row.unit_price > 0 && !tradeItems[row.id] && (
+                  <span className="shrink-0" style={{ color: "#71717A" }}>{brl(row.unit_price)}</span>
+                )}
+                {row.rowIdx === 0 && (isPending || isAprovado) && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleTrade(row.id); }}
+                    disabled={togglingTrade === row.id}
+                    className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-lg transition-all"
+                    style={{
+                      background: tradeItems[row.id] ? "rgba(245,158,11,0.2)" : "rgba(255,255,255,0.05)",
+                      color: tradeItems[row.id] ? "#F59E0B" : "#52525B",
+                      border: tradeItems[row.id] ? "1px solid rgba(245,158,11,0.35)" : "1px solid rgba(255,255,255,0.08)",
+                      opacity: togglingTrade === row.id ? 0.5 : 1,
+                    }}
+                  >
+                    ⇄ troca
+                  </button>
+                )}
+                {row.rowIdx === 0 && !isAprovado && !isSeparado && tradeItems[row.id] && (
+                  <span className="shrink-0 text-[10px] font-bold" style={{ color: "#F59E0B" }}>⇄ troca</span>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -318,7 +376,7 @@ function OrderCard({
             disabled={!allChecked || updating}
           >
             <Package className="h-3.5 w-3.5" />
-            {allChecked ? "Marcar como Separado" : `Separe todos os itens (${Object.values(checked).filter(Boolean).length}/${order.order_items.length})`}
+            {allChecked ? "Marcar como Separado" : `Separe todos os itens (${Object.values(checked).filter(Boolean).length}/${expandedRows.length})`}
           </button>
         </div>
       )}

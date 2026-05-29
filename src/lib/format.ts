@@ -1,8 +1,9 @@
-// Preco base pelo codigo: logo (XX1) e FWC = R$2, demais = R$1
+// Preco base pelo codigo: logo (XX1), figurinha 13 e FWC = R$2, demais = R$1
 export function stickerPrice(code: string | null | undefined): number {
   if (!code) return 1;
   if (code === "00" || code.startsWith("FWC")) return 2;
-  if (/^[A-Z]{2,3}1$/.test(code)) return 2;
+  if (/^[A-Z]{2,3}1$/.test(code)) return 2;  // Logo do time
+  if (/^[A-Z]{2,3}13$/.test(code)) return 2; // Figurinha 13 especial
   return 1;
 }
 
