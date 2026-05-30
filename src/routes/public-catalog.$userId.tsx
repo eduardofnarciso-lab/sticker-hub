@@ -270,9 +270,10 @@ function PublicCatalog() {
   );
   const cartTotal    = cart.reduce((acc, i) => acc + i.qty, 0);
   // Preço cheio (sem desconto) para mostrar economia
-  const cartFull     = cart.reduce((acc, i) => acc + i.qty * stickerPrice(i.code), 0);
+  const cartFull     = cart.reduce((acc, i) => acc + i.qty * i.price, 0);
   // Preço com desconto por volume aplicado
-  const cartValue    = cart.reduce((acc, i) => acc + i.qty * discountedPrice(i.code, cartTotal), 0);
+  const _discPct     = cartTotal >= 500 ? 0.15 : cartTotal >= 250 ? 0.10 : cartTotal >= 150 ? 0.05 : 0;
+  const cartValue    = cart.reduce((acc, i) => acc + i.qty * i.price * (1 - _discPct), 0);
   const cartDiscount = discountLabel(cartTotal);
   const cartSaving   = cartFull - cartValue;
 
@@ -410,7 +411,7 @@ function PublicCatalog() {
           sticker_code: c.code,
           sticker_name: c.name,
           quantity:     c.qty,
-          unit_price:   discountedPrice(c.code, cartTotal), // preço com desconto
+          unit_price:   c.price * (1 - _discPct), // preço com desconto
         })),
       });
       if (error) throw error;
@@ -841,7 +842,7 @@ function PublicCatalog() {
                             <div className="text-sm truncate">{fmtName(s.name)}</div>
                             <div className="flex items-center gap-2 mt-0.5">
                               {(() => {
-                                const dprice = discountedPrice(s.code, cartTotal);
+                                const dprice = (s.price ? Number(s.price) : stickerPrice(s.code)) * (1 - _discPct);
                                 return (
                                   <>
                                     <span className="text-xs font-bold text-green-700">{brl(dprice)}</span>
@@ -944,7 +945,7 @@ function PublicCatalog() {
                 [...cart].sort((a, b) => a.code.localeCompare(b.code)).map((item) => {
                   const teamCode = teamCodeFromSticker(item.code);
                   const flag     = flagUrl(teamCode);
-                  const unitPrice = discountedPrice(item.code, cartTotal);
+                  const unitPrice = item.price * (1 - _discPct);
                   const subtotal  = unitPrice * item.qty;
                   return (
                     <div
