@@ -84,9 +84,10 @@ function StockPage() {
   // Stats para os cards
   const stats = useMemo(() => {
     const disponiveis = stickers.filter((s) => s.quantity > 0 && s.status === "disponivel");
-    const normais   = disponiveis.filter((s) => stickerPrice(s.code) === 1).reduce((a, s) => a + s.quantity, 0);
-    const especiais = disponiveis.filter((s) => stickerPrice(s.code) === 2).reduce((a, s) => a + s.quantity, 0);
-    const valorEstimado = disponiveis.reduce((acc, s) => acc + stickerPrice(s.code) * s.quantity, 0);
+    const getPrice = (s: typeof disponiveis[0]) => s.price ? Number(s.price) : stickerPrice(s.code);
+    const normais   = disponiveis.filter((s) => getPrice(s) === 1).reduce((a, s) => a + s.quantity, 0);
+    const especiais = disponiveis.filter((s) => getPrice(s) === 2).reduce((a, s) => a + s.quantity, 0);
+    const valorEstimado = disponiveis.reduce((acc, s) => acc + getPrice(s) * s.quantity, 0);
 
     // Vendidos e pendentes vêm da tabela orders
     const valorVendido  = orders.filter((o) => o.status === "aprovado").reduce((acc, o) => acc + Number(o.total_value), 0);
@@ -266,7 +267,7 @@ function StockPage() {
       ) : (
         <div className="space-y-2 pb-8">
           {filtered.map((s) => {
-            const price = stickerPrice(s.code);
+            const price = s.price ? Number(s.price) : stickerPrice(s.code);
             const emFalta = s.quantity === 0 && s.status !== "vendida";
             const statusStyle = emFalta
               ? { bg: "rgba(239,68,68,0.12)", color: "#EF4444", border: "rgba(239,68,68,0.25)" }

@@ -329,7 +329,7 @@ function PublicCatalog() {
           code:   s.code ?? "",
           name:   s.name,
           team:   s.team ?? "",
-          price:  stickerPrice(s.code),
+          price:  s.price ? Number(s.price) : stickerPrice(s.code),
           qty:    1,
           maxQty: avail,
         },
@@ -811,7 +811,7 @@ function PublicCatalog() {
                     {items.map((s) => {
                       const inCart = cart.find((c) => c.id === s.id);
                       const avail  = availableQty(s);
-                      const price  = stickerPrice(s.code);
+                      const price  = s.price ? Number(s.price) : stickerPrice(s.code);
                       const esgotado = avail <= 0 && !inCart;
 
                       return (
