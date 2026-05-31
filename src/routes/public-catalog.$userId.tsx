@@ -126,7 +126,55 @@ function parseWishlist(text: string): string[] {
 }
 
 // ─── Componente ────────────────────────────────────────────────────────────────
+const CATALOG_PAUSADO = true; // <- mude para false para reabrir
+
 function PublicCatalog() {
+  if (CATALOG_PAUSADO) {
+    return (
+      <div style={{
+        minHeight: "100dvh",
+        background: "#0B1020",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "2rem",
+        textAlign: "center",
+        gap: "1.5rem",
+      }}>
+        <div style={{ fontSize: "4rem" }}>📦</div>
+        <h1 style={{ color: "#FFFFFF", fontSize: "clamp(1.5rem, 5vw, 2.5rem)", fontWeight: 800, lineHeight: 1.2 }}>
+          Renovando Estoque
+        </h1>
+        <p style={{ color: "#A1A1AA", fontSize: "clamp(1rem, 3vw, 1.25rem)", maxWidth: 480, lineHeight: 1.6 }}>
+          Em breve teremos mais figurinhas disponíveis para você completar seu álbum!
+        </p>
+        <p style={{ color: "#71717A", fontSize: "1rem" }}>
+          Qualquer dúvida entre em contato:
+        </p>
+        <a
+          href="https://wa.me/5515991460543"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            background: "rgba(37,211,102,0.15)",
+            color: "#25D366",
+            border: "1px solid rgba(37,211,102,0.35)",
+            borderRadius: "1rem",
+            padding: "0.75rem 1.5rem",
+            fontWeight: 700,
+            fontSize: "1.1rem",
+            textDecoration: "none",
+          }}
+        >
+          📲 (15) 99146-0543
+        </a>
+      </div>
+    );
+  }
   const { userId } = Route.useParams();
   const qc         = useQueryClient();
   const sessionId  = useRef(getSessionId()).current;
