@@ -126,7 +126,7 @@ function parseWishlist(text: string): string[] {
 }
 
 // ─── Componente ────────────────────────────────────────────────────────────────
-const CATALOG_PAUSADO = true; // <- mude para false para reabrir
+const CATALOG_PAUSADO = false; // <- mude para true para pausar o catálogo
 
 function PublicCatalog() {
   if (CATALOG_PAUSADO) {
