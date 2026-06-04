@@ -210,6 +210,65 @@ function ContagemPage() {
         />
       </div>
 
+      {/* ── Seção Extras ── */}
+      {(() => {
+        const extras = [
+          { code: "EXT01L",  name: "Vinícius Júnior — Lilás",    color: "#A78BFA" },
+          { code: "EXT01BR", name: "Vinícius Júnior — Bronze",   color: "#CD7F32" },
+          { code: "EXT01P",  name: "Vinícius Júnior — Prata",    color: "#C0C0C0" },
+          { code: "EXT01O",  name: "Vinícius Júnior — Ouro",     color: "#FFD700" },
+          { code: "EXT02L",  name: "Moisés Caicedo — Lilás",     color: "#A78BFA" },
+          { code: "EXT02BR", name: "Moisés Caicedo — Bronze",    color: "#CD7F32" },
+          { code: "EXT02P",  name: "Moisés Caicedo — Prata",     color: "#C0C0C0" },
+          { code: "EXT02O",  name: "Moisés Caicedo — Ouro",      color: "#FFD700" },
+        ];
+        const anyExtra = extras.some((e) => dbMap.has(e.code));
+        if (!anyExtra) return null;
+        return (
+          <div className="rounded-2xl p-4 space-y-3"
+            style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.25)" }}>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold" style={{ color: "#A78BFA" }}>⭐ Extras</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {extras.map((e) => {
+                if (!dbMap.has(e.code)) return null;
+                const qty = getQty(e.code);
+                const tpl = { code: e.code, name: e.name } as StickerTemplate;
+                const isSaving = saving.has(e.code);
+                return (
+                  <div key={e.code} className="rounded-xl p-2.5 flex flex-col gap-2"
+                    style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${e.color}44` }}>
+                    <div>
+                      <div className="text-[10px] font-mono font-bold" style={{ color: e.color }}>{e.code}</div>
+                      <div className="text-[11px] leading-tight" style={{ color: "#E4E4E7" }}>
+                        {e.name.split(" — ")[0]}
+                      </div>
+                      <div className="text-[10px] font-bold" style={{ color: e.color }}>
+                        {e.name.split(" — ")[1]}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-1">
+                      <button onClick={() => adjust(tpl, -1)} disabled={qty === 0 || isSaving}
+                        className="h-7 w-7 rounded-lg flex items-center justify-center transition-all disabled:opacity-40"
+                        style={{ background: "rgba(239,68,68,0.15)", color: "#EF4444" }}>
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <span className="font-black text-base" style={{ color: qty > 0 ? "#22D3EE" : "#52525B" }}>{qty}</span>
+                      <button onClick={() => adjust(tpl, +1)} disabled={isSaving}
+                        className="h-7 w-7 rounded-lg flex items-center justify-center transition-all"
+                        style={{ background: "rgba(34,211,238,0.15)", color: "#22D3EE" }}>
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Seleções na ordem do álbum */}
       <div className="space-y-6 pb-8">
         {visibleSections.map((sec) => {
