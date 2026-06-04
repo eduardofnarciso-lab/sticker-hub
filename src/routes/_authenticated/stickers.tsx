@@ -29,6 +29,22 @@ function StickersPage() {
     },
   });
 
+  const EXTRAS = [
+    { code: "EXT01L",  name: "Vinícius Júnior — Lilás" },
+    { code: "EXT01BR", name: "Vinícius Júnior — Bronze" },
+    { code: "EXT01P",  name: "Vinícius Júnior — Prata" },
+    { code: "EXT01O",  name: "Vinícius Júnior — Ouro" },
+    { code: "EXT02L",  name: "Moisés Caicedo — Lilás" },
+    { code: "EXT02BR", name: "Moisés Caicedo — Bronze" },
+    { code: "EXT02P",  name: "Moisés Caicedo — Prata" },
+    { code: "EXT02O",  name: "Moisés Caicedo — Ouro" },
+  ];
+
+  const rarityColor: Record<string, string> = {
+    L: "#A78BFA", BR: "#CD7F32", P: "#C0C0C0", O: "#FFD700",
+  };
+  const getRarityKey = (code: string) => code.replace(/^EXT\d+/, "");
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
@@ -40,6 +56,48 @@ function StickersPage() {
           <Plus className="h-4 w-4" />
           Nova
         </Button>
+      </div>
+
+      {/* ── Seção Extras ── */}
+      <div className="rounded-2xl p-4 space-y-3"
+        style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.2)" }}>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold" style={{ color: "#A78BFA" }}>⭐ Figurinhas Extras</span>
+          <span className="text-xs" style={{ color: "#71717A" }}>Cadastro rápido</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {EXTRAS.map((e) => {
+            const rarityKey = getRarityKey(e.code);
+            const color = rarityColor[rarityKey] ?? "#A78BFA";
+            const exists = data.some((s) => s.code === e.code);
+            return (
+              <button
+                key={e.code}
+                disabled={exists}
+                onClick={() => {
+                  setEditing({ id: undefined, name: e.name, code: e.code, album_id: null, team: "Extra", rarity: null, condition: "nova", quantity: 1, price: 5, image_url: null, notes: null, status: "disponivel" });
+                  setOpen(true);
+                }}
+                className="rounded-xl px-2 py-2 text-left transition-all"
+                style={{
+                  background: exists ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.05)",
+                  border: `1px solid ${exists ? "rgba(255,255,255,0.06)" : color + "55"}`,
+                  opacity: exists ? 0.5 : 1,
+                  cursor: exists ? "not-allowed" : "pointer",
+                }}
+              >
+                <div className="text-[10px] font-mono font-bold" style={{ color }}>{e.code}</div>
+                <div className="text-[11px] leading-tight mt-0.5" style={{ color: exists ? "#52525B" : "#E4E4E7" }}>
+                  {e.name.split(" — ")[0]}
+                </div>
+                <div className="text-[10px] font-bold mt-0.5" style={{ color }}>
+                  {e.name.split(" — ")[1]}
+                </div>
+                {exists && <div className="text-[9px] mt-1" style={{ color: "#22C55E" }}>✓ cadastrada</div>}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {isLoading ? (
