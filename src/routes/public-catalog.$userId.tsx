@@ -126,7 +126,7 @@ function parseWishlist(text: string): string[] {
 }
 
 // ─── Componente ────────────────────────────────────────────────────────────────
-const CATALOG_PAUSADO = true; // <- mude para false para reabrir
+const CATALOG_PAUSADO = false; // <- mude para true para pausar o catálogo
 
 function PublicCatalog() {
   if (CATALOG_PAUSADO) {
@@ -694,22 +694,7 @@ function PublicCatalog() {
       <div className="max-w-3xl mx-auto px-4 py-4 space-y-4">
 
         {/* ── Banner informativo ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {/* CTA plataforma */}
-          <a
-            href="/planos"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2.5 bg-green-50 border border-green-200 rounded-xl px-3 py-2.5 hover:bg-green-100 transition-colors group"
-          >
-            <div className="h-8 w-8 rounded-lg bg-green-600 flex items-center justify-center shrink-0">
-              <Sticker className="h-4 w-4 text-white" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-xs font-bold text-green-700 leading-tight">Quer vender suas figurinhas?</div>
-              <div className="text-[11px] text-green-600/80">Clique e conheça nossa plataforma →</div>
-            </div>
-          </a>
+        <div className="grid grid-cols-1 gap-2">
           {/* Descontos */}
           <div className="flex items-center gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
             <div className="h-8 w-8 rounded-lg bg-amber-500 flex items-center justify-center shrink-0 text-white font-black text-xs">
