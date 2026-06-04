@@ -10,9 +10,11 @@ import { brl, fmtCode, fmtName, stickerPrice, discountedPrice, discountLabel } f
 import { flagUrl, getAllSections } from "@/lib/copa2026Data";
 
 // Mapa teamCode → posição no álbum (calculado uma vez no módulo)
-const ALBUM_ORDER = new Map<string, number>(
-  getAllSections().map((s, i) => [s.teamCode, i])
-);
+// EXT = -1 para aparecer sempre no topo
+const ALBUM_ORDER = new Map<string, number>([
+  ["EXT", -1],
+  ...getAllSections().map((s, i) => [s.teamCode, i] as [string, number]),
+]);
 
 // Número da figurinha dentro do time (ordena 1,2...10,11 em vez de 1,10,11...2)
 function stickerSortNum(code: string): number {
