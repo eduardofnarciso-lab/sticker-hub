@@ -47,11 +47,12 @@ function Dashboard() {
         (s) => (s.quantity ?? 0) > 0 && VALID_CODES.has(s.code ?? "")
       );
 
+      const getPrice = (s: typeof comEstoque[0]) => s.price ? Number(s.price) : stickerPrice(s.code);
       const valorEstimado = comEstoque.reduce(
-        (acc, s) => acc + stickerPrice(s.code) * (s.quantity ?? 0), 0
+        (acc, s) => acc + getPrice(s) * (s.quantity ?? 0), 0
       );
-      const normais   = comEstoque.filter((s) => stickerPrice(s.code) === 1).reduce((a, s) => a + s.quantity, 0);
-      const especiais = comEstoque.filter((s) => stickerPrice(s.code) === 2).reduce((a, s) => a + s.quantity, 0);
+      const normais   = comEstoque.filter((s) => getPrice(s) < 2).reduce((a, s) => a + s.quantity, 0);
+      const especiais = comEstoque.filter((s) => getPrice(s) >= 2).reduce((a, s) => a + s.quantity, 0);
       const totalEmEstoque = normais + especiais;
 
       const ordersData    = orders ?? [];
