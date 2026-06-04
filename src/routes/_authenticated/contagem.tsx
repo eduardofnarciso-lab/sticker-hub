@@ -222,8 +222,6 @@ function ContagemPage() {
           { code: "EXT02P",  name: "Moisés Caicedo — Prata",     color: "#C0C0C0" },
           { code: "EXT02O",  name: "Moisés Caicedo — Ouro",      color: "#FFD700" },
         ];
-        const anyExtra = extras.some((e) => dbMap.has(e.code));
-        if (!anyExtra) return null;
         return (
           <div className="rounded-2xl p-4 space-y-3"
             style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.25)" }}>
@@ -232,7 +230,6 @@ function ContagemPage() {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {extras.map((e) => {
-                if (!dbMap.has(e.code)) return null;
                 const qty = getQty(e.code);
                 const tpl = { code: e.code, name: e.name } as StickerTemplate;
                 const isSaving = saving.has(e.code);
