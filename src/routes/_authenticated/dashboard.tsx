@@ -51,16 +51,20 @@ function Dashboard() {
       const valorEstimado = comEstoque.reduce(
         (acc, s) => acc + getPrice(s) * (s.quantity ?? 0), 0
       );
-      const normais   = comEstoque.filter((s) => getPrice(s) < 2).reduce((a, s) => a + s.quantity, 0);
-      const especiais = comEstoque.filter((s) => getPrice(s) >= 2).reduce((a, s) => a + s.quantity, 0);
-      const totalEmEstoque = normais + especiais;
+      const isEscudo = (code: string | null) =>
+        !!code && (code === "00" || code.startsWith("FWC") || /^[A-Z]{2,3}1$/.test(code));
+      const isExtra  = (code: string | null) => !!code && code.startsWith("EX");
+      const normais   = comEstoque.filter((s) => !isEscudo(s.code) && !isExtra(s.code)).reduce((a, s) => a + s.quantity, 0);
+      const especiais = comEstoque.filter((s) => isEscudo(s.code)).reduce((a, s) => a + s.quantity, 0);
+      const extras    = comEstoque.filter((s) => isExtra(s.code)).reduce((a, s) => a + s.quantity, 0);
+      const totalEmEstoque = normais + especiais + extras;
 
       const ordersData    = orders ?? [];
       const valorVendido  = ordersData.filter((o) => ["aprovado","separado","entregue"].includes(o.status)).reduce((acc, o) => acc + Number(o.total_value), 0);
       const valorPendente = ordersData.filter((o) => o.status === "pendente").reduce((acc, o) => acc + Number(o.total_value), 0);
       const qtdPendentes  = ordersData.filter((o) => o.status === "pendente").length;
 
-      return { valorEstimado, valorPendente, valorVendido, normais, especiais, totalEmEstoque, qtdPendentes };
+      return { valorEstimado, valorPendente, valorVendido, normais, especiais, extras, totalEmEstoque, qtdPendentes };
     },
   });
 
@@ -79,7 +83,8 @@ function Dashboard() {
     { label: "Total Vendido", value: brl(data?.valorVendido ?? 0), sub: "aprovados + separados + entregues", icon: BadgeDollarSign, gradient: "linear-gradient(135deg,#22D3EE,#34D399)", glow: "rgba(34,211,238,0.3)" },
     { label: "Pendente", value: brl(data?.valorPendente ?? 0), sub: `${data?.qtdPendentes ?? 0} pedido${(data?.qtdPendentes ?? 0) !== 1 ? "s" : ""} aguardando`, icon: Clock, gradient: "linear-gradient(135deg,#F59E0B,#EF4444)", glow: "rgba(245,158,11,0.3)" },
     { label: "Normais", value: data?.normais ?? 0, sub: "jogadores · R$ 1,00", icon: TrendingUp, gradient: "linear-gradient(135deg,#60A5FA,#8B5CF6)", glow: "rgba(96,165,250,0.3)" },
-    { label: "Escudo / FWC", value: data?.especiais ?? 0, sub: "logos e copa · R$ 2,00", icon: Trophy, gradient: "linear-gradient(135deg,#F59E0B,#60A5FA)", glow: "rgba(245,158,11,0.25)" },
+    { label: "Escudo / FWC", value: data?.especiais ?? 0, sub: "logos e copa · R$ 2,00+", icon: Trophy, gradient: "linear-gradient(135deg,#F59E0B,#60A5FA)", glow: "rgba(245,158,11,0.25)" },
+    { label: "Extras", value: data?.extras ?? 0, sub: "figurinhas especiais", icon: Sticker, gradient: "linear-gradient(135deg,#A78BFA,#F472B6)", glow: "rgba(167,139,250,0.3)" },
   ];
 
   return (
