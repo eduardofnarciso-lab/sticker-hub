@@ -110,10 +110,13 @@ function StickersPage() {
     { code: "EX20-B", name: "Jérémy Doku (Bélgica) — Bronze" },
     { code: "EX20-P", name: "Jérémy Doku (Bélgica) — Prata" },
     { code: "EX20-O", name: "Jérémy Doku (Bélgica) — Ouro" },
+    { code: "EX03-R", name: "Lamine Yamal (Espanha) — Rosa" },
+    { code: "EX09-R", name: "Lionel Messi (Argentina) — Rosa" },
+    { code: "EX19-R", name: "Federico Valverde (Uruguai) — Rosa" },
   ];
 
   const rarityColor: Record<string, string> = {
-    L: "#A78BFA", B: "#CD7F32", P: "#C0C0C0", O: "#FFD700",
+    L: "#A78BFA", B: "#CD7F32", P: "#C0C0C0", O: "#FFD700", R: "#F472B6",
   };
   const getRarityKey = (code: string) => code.split("-")[1] ?? "";
 

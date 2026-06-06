@@ -44,7 +44,7 @@ function Dashboard() {
 
       const list = stickers ?? [];
       const comEstoque = list.filter(
-        (s) => (s.quantity ?? 0) > 0 && VALID_CODES.has(s.code ?? "")
+        (s) => (s.quantity ?? 0) > 0
       );
 
       const getPrice = (s: typeof comEstoque[0]) => s.price ? Number(s.price) : stickerPrice(s.code);
