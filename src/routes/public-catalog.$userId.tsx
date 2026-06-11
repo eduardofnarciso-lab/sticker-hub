@@ -705,7 +705,7 @@ function PublicCatalog() {
             </div>
             <div className="min-w-0">
               <div className="text-xs font-bold text-amber-700 leading-tight">Descontos por volume</div>
-              <div className="text-[11px] text-amber-600/90">150→5% · 250→10% · 500→15%</div>
+              <div className="text-[11px] text-amber-600/90">150→10% · 500→15%</div>
             </div>
           </div>
         </div>
@@ -1068,15 +1068,10 @@ function PublicCatalog() {
                     {/* Próxima faixa */}
                     {cartTotal < 150 && (
                       <p className="text-[11px] text-center text-muted-foreground">
-                        Mais {150 - cartTotal} figurinha{150 - cartTotal !== 1 ? "s" : ""} para ganhar 5% de desconto
+                        Mais {150 - cartTotal} figurinha{150 - cartTotal !== 1 ? "s" : ""} para ganhar 10% de desconto
                       </p>
                     )}
-                    {cartTotal >= 150 && cartTotal < 250 && (
-                      <p className="text-[11px] text-center text-muted-foreground">
-                        Mais {250 - cartTotal} figurinha{250 - cartTotal !== 1 ? "s" : ""} para 10% de desconto
-                      </p>
-                    )}
-                    {cartTotal >= 250 && cartTotal < 500 && (
+                    {cartTotal >= 150 && cartTotal < 500 && (
                       <p className="text-[11px] text-center text-muted-foreground">
                         Mais {500 - cartTotal} figurinha{500 - cartTotal !== 1 ? "s" : ""} para 15% de desconto
                       </p>
