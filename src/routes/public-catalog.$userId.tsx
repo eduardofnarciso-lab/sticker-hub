@@ -617,6 +617,50 @@ function PublicCatalog() {
     );
   }
 
+  // ── CATÁLOGO EM PAUSA ─────────────────────────────────────────────────────
+  const CATALOGO_PAUSADO = true; // mude para false para reabrir
+
+  if (CATALOGO_PAUSADO) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: "linear-gradient(135deg, #0F0F1A 0%, #1A1033 100%)" }}>
+        <div className="text-center space-y-6 max-w-sm w-full">
+          <div className="flex justify-center">
+            <div className="h-24 w-24 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(139,92,246,0.15)", border: "2px solid rgba(139,92,246,0.3)" }}>
+              <span className="text-5xl">📦</span>
+            </div>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Estoque em renovação</h1>
+            <p className="text-sm mt-2" style={{ color: "#A1A1AA" }}>
+              Estamos preparando novidades para você.<br />
+              Em breve o catálogo estará disponível novamente!
+            </p>
+          </div>
+          <div className="rounded-2xl px-4 py-3"
+            style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.2)" }}>
+            <p className="text-xs" style={{ color: "#A78BFA" }}>
+              ⭐ Figurinhas novas chegando em breve
+            </p>
+          </div>
+          {seller?.whatsapp && (
+            <a
+              href={`https://wa.me/55${seller.whatsapp.replace(/\D/g, "")}?text=Ol%C3%A1!%20Vi%20que%20o%20cat%C3%A1logo%20est%C3%A1%20em%20renova%C3%A7%C3%A3o.%20Quando%20volta%3F`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
+              style={{ background: "linear-gradient(135deg,#22C55E,#16A34A)" }}
+            >
+              <span>💬</span> Avisar quando voltar
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  }
+  // ─────────────────────────────────────────────────────────────────────────────
+
   return (
     <div className="min-h-screen bg-background">
 
