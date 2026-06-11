@@ -13,16 +13,14 @@ export function discountedPrice(code: string | null | undefined, totalQty: numbe
   const base = stickerPrice(code);
   const special = base === 2;
   if (totalQty >= 500) return special ? 1.85 : 0.85;
-  if (totalQty >= 250) return special ? 1.90 : 0.90;
-  if (totalQty >= 150) return special ? 1.95 : 0.95;
+  if (totalQty >= 150) return special ? 1.80 : 0.90;
   return base;
 }
 
 // Rotulo do desconto ativo
 export function discountLabel(totalQty: number): { pct: number; label: string } | null {
   if (totalQty >= 500) return { pct: 15, label: "500+ figurinhas — 15% de desconto" };
-  if (totalQty >= 250) return { pct: 10, label: "250+ figurinhas — 10% de desconto" };
-  if (totalQty >= 150) return { pct: 5,  label: "150+ figurinhas — 5% de desconto" };
+  if (totalQty >= 150) return { pct: 10, label: "150+ figurinhas — 10% de desconto" };
   return null;
 }
 
