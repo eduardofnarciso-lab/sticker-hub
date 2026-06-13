@@ -25,6 +25,7 @@ import { Route as AuthenticatedContagemRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAlbumsRouteImport } from './routes/_authenticated/albums'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedStockHistoryRouteImport } from './routes/_authenticated/stock-history'
+import { Route as AuthenticatedCampanhaRouteImport } from './routes/_authenticated/campanha'
 
 const FigurinhaNumeroRoute = FigurinhaNumeroRouteImport.update({
   id: '/figurinha/$numero',
@@ -105,6 +106,11 @@ const AuthenticatedStockHistoryRoute = AuthenticatedStockHistoryRouteImport.upda
   path: '/stock-history',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedCampanhaRoute = AuthenticatedCampanhaRouteImport.update({
+  id: '/campanha',
+  path: '/campanha',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/stickers': typeof AuthenticatedStickersRoute
   '/stock': typeof AuthenticatedStockRoute
   '/stock-history': typeof AuthenticatedStockHistoryRoute
+  '/campanha': typeof AuthenticatedCampanhaRoute
   '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
   '/figurinha/$numero': typeof FigurinhaNumeroRoute
   '/comprar/$figurinha': typeof ComprarFigurinhaRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/stickers': typeof AuthenticatedStickersRoute
   '/stock': typeof AuthenticatedStockRoute
   '/stock-history': typeof AuthenticatedStockHistoryRoute
+  '/campanha': typeof AuthenticatedCampanhaRoute
   '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
   '/figurinha/$numero': typeof FigurinhaNumeroRoute
   '/comprar/$figurinha': typeof ComprarFigurinhaRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/_authenticated/stickers': typeof AuthenticatedStickersRoute
   '/_authenticated/stock': typeof AuthenticatedStockRoute
   '/_authenticated/stock-history': typeof AuthenticatedStockHistoryRoute
+  '/_authenticated/campanha': typeof AuthenticatedCampanhaRoute
   '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
   '/figurinha/$numero': typeof FigurinhaNumeroRoute
   '/comprar/$figurinha': typeof ComprarFigurinhaRoute
@@ -174,6 +183,7 @@ export interface FileRouteTypes {
     | '/stickers'
     | '/stock'
     | '/stock-history'
+    | '/campanha'
     | '/public-catalog/$userId'
     | '/figurinha/$numero'
     | '/comprar/$figurinha'
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/stickers'
     | '/stock'
     | '/stock-history'
+    | '/campanha'
     | '/public-catalog/$userId'
     | '/figurinha/$numero'
     | '/comprar/$figurinha'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/_authenticated/stickers'
     | '/_authenticated/stock'
     | '/_authenticated/stock-history'
+    | '/_authenticated/campanha'
     | '/public-catalog/$userId'
     | '/figurinha/$numero'
     | '/comprar/$figurinha'
@@ -338,6 +350,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStockHistoryRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/campanha': {
+      id: '/_authenticated/campanha'
+      path: '/campanha'
+      fullPath: '/campanha'
+      preLoaderRoute: typeof AuthenticatedCampanhaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -351,6 +370,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedStickersRoute: typeof AuthenticatedStickersRoute
   AuthenticatedStockRoute: typeof AuthenticatedStockRoute
   AuthenticatedStockHistoryRoute: typeof AuthenticatedStockHistoryRoute
+  AuthenticatedCampanhaRoute: typeof AuthenticatedCampanhaRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -363,6 +383,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedStickersRoute: AuthenticatedStickersRoute,
   AuthenticatedStockRoute: AuthenticatedStockRoute,
   AuthenticatedStockHistoryRoute: AuthenticatedStockHistoryRoute,
+  AuthenticatedCampanhaRoute: AuthenticatedCampanhaRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
