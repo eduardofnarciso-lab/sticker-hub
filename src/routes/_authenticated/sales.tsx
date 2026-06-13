@@ -102,6 +102,50 @@ function OrderCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [checked, setChecked]   = useState<Record<string, boolean>>({});
+
+  const handlePrint = () => {
+    const totalQty = order.order_items.reduce((sum, i) => sum + i.quantity, 0);
+    const rows = order.order_items
+      .flatMap((item) =>
+        Array.from({ length: item.quantity }, (_, idx) => `
+          <tr style="border-bottom:1px solid #e5e7eb;">
+            <td style="padding:6px 8px;font-family:monospace;font-weight:bold;">${item.sticker_code ?? "—"}</td>
+            <td style="padding:6px 8px;">${item.sticker_name ?? "—"}</td>
+            <td style="padding:6px 8px;text-align:center;">☐</td>
+          </tr>`)
+      ).join("");
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+      <title>Separação — ${order.buyer_name}</title>
+      <style>
+        body{font-family:Arial,sans-serif;margin:24px;color:#111;}
+        h2{margin:0 0 4px;}
+        .meta{font-size:13px;color:#555;margin-bottom:16px;}
+        table{width:100%;border-collapse:collapse;font-size:13px;}
+        th{background:#f3f4f6;padding:7px 8px;text-align:left;border-bottom:2px solid #d1d5db;}
+        td{vertical-align:middle;}
+        .footer{margin-top:16px;font-size:12px;color:#888;}
+        @media print{body{margin:12px;}}
+      </style></head><body>
+      <h2>📦 Lista de Separação</h2>
+      <div class="meta">
+        <strong>Cliente:</strong> ${order.buyer_name} &nbsp;|&nbsp;
+        <strong>Pedido:</strong> #${order.id.slice(0,8).toUpperCase()} &nbsp;|&nbsp;
+        <strong>Total:</strong> ${totalQty} figurinha${totalQty !== 1 ? "s" : ""} &nbsp;|&nbsp;
+        <strong>Valor:</strong> R$ ${Number(order.total_value).toFixed(2).replace(".",",")}
+      </div>
+      <table>
+        <thead><tr><th>Código</th><th>Nome</th><th style="width:60px;text-align:center;">✓</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="footer">Impresso em ${new Date().toLocaleString("pt-BR")}</div>
+      </body></html>`;
+    const w = window.open("", "_blank", "width=700,height=900");
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    w.print();
+  };
   const [tradeItems, setTradeItems] = useState<Record<string, boolean>>(
     () => Object.fromEntries(order.order_items.map((i) => [i.id, i.is_trade ?? false]))
   );
@@ -247,17 +291,26 @@ function OrderCard({
               <p className="text-[10px]" style={{ color: "#71717A" }}>
                 Marque cada figurinha ao separar:
               </p>
-              <button
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-lg transition-all"
-                style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA" }}
-                onClick={() => {
-                  const all: Record<string, boolean> = {};
-                  expandedRows.forEach((r) => { all[r.rowKey] = true; });
-                  setChecked(all);
-                }}
-              >
-                Marcar tudo ✓
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded-lg transition-all"
+                  style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA" }}
+                  onClick={() => {
+                    const all: Record<string, boolean> = {};
+                    expandedRows.forEach((r) => { all[r.rowKey] = true; });
+                    setChecked(all);
+                  }}
+                >
+                  Marcar tudo ✓
+                </button>
+                <button
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded-lg transition-all"
+                  style={{ background: "rgba(96,165,250,0.15)", color: "#60A5FA" }}
+                  onClick={handlePrint}
+                >
+                  🖨️ Imprimir
+                </button>
+              </div>
             </div>
           )}
           {/* Times do pedido */}
