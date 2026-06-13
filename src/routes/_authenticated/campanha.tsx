@@ -10,16 +10,23 @@ const CATALOG_URL =
   "https://figu.spiritrelay.com/public-catalog/b881921e-5a70-4df1-879e-d88dbb5b1628";
 
 function buildMsg(nome: string) {
+  const w  = String.fromCodePoint(0x1F44B); // 👋
+  const p  = String.fromCodePoint(0x1F389); // 🎉
+  const c  = String.fromCodePoint(0x1F4F8); // 📸
+  const tr = String.fromCodePoint(0x1F3C6); // 🏆
+  const g  = String.fromCodePoint(0x1F30D); // 🌍
+  const pt = String.fromCodePoint(0x1F449); // 👉
+  const sm = String.fromCodePoint(0x1F60A); // 😊
   return (
-    `Olá, ${nome}! 👋\n\n` +
-    `Estamos *renovando o estoque* de figurinhas da Copa 2026! 🎉\n\n` +
+    `Olá, ${nome}! ${w}\n\n` +
+    `Estamos *renovando o estoque* de figurinhas da Copa 2026! ${p}\n\n` +
     `Temos bastante disponível, aproveitem:\n\n` +
-    `📸 *Posição 13* — Foto da Seleção\n` +
-    `🏆 *FWC* — Figurinhas da Copa\n` +
-    `🌍 *Seleções difíceis* de encontrar\n\n` +
+    `${c} *Posição 13* — Foto da Seleção\n` +
+    `${tr} *FWC* — Figurinhas da Copa\n` +
+    `${g} *Seleções difíceis* de encontrar\n\n` +
     `Garante as suas antes que acabe:\n` +
-    `👉 ${CATALOG_URL}\n\n` +
-    `Qualquer dúvida é só chamar! 😊`
+    `${pt} ${CATALOG_URL}\n\n` +
+    `Qualquer dúvida é só chamar! ${sm}`
   );
 }
 
