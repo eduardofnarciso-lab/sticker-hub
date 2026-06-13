@@ -8,6 +8,7 @@ import {
   LogOut,
   ShieldCheck,
   ClipboardList,
+  Megaphone,
 } from "lucide-react";
 import { type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,7 @@ const nav = [
   { to: "/stock",         label: "Estoque",    icon: PackageSearch },
   { to: "/sales",         label: "Vendas",     icon: Receipt },
   { to: "/stock-history", label: "Histórico",  icon: ClipboardList },
+  { to: "/campanha",     label: "Campanha",   icon: Megaphone },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
