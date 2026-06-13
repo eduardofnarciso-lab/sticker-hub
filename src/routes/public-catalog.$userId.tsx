@@ -618,41 +618,60 @@ function PublicCatalog() {
   }
 
   // ── CATÁLOGO EM PAUSA ─────────────────────────────────────────────────────
-  const CATALOGO_PAUSADO = false; // mude para false para reabrir
+  const CATALOGO_PAUSADO = true; // mude para false para reabrir
 
   if (CATALOGO_PAUSADO) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4"
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-10"
         style={{ background: "linear-gradient(135deg, #0F0F1A 0%, #1A1033 100%)" }}>
-        <div className="text-center space-y-6 max-w-sm w-full">
-          <div className="flex justify-center">
-            <div className="h-24 w-24 rounded-full flex items-center justify-center"
-              style={{ background: "rgba(139,92,246,0.15)", border: "2px solid rgba(139,92,246,0.3)" }}>
-              <span className="text-5xl">📦</span>
-            </div>
+        <div className="text-center space-y-5 max-w-md w-full">
+
+          {/* Foto do estoque */}
+          <div className="overflow-hidden rounded-2xl shadow-2xl"
+            style={{ border: "2px solid rgba(139,92,246,0.35)" }}>
+            <img
+              src="/estoque-foto.jpg"
+              alt="Novo estoque de figurinhas Copa 2026"
+              className="w-full object-cover"
+              style={{ maxHeight: "260px" }}
+            />
           </div>
+
+          {/* Título */}
           <div>
-            <h1 className="text-2xl font-bold text-white">Estoque em renovação</h1>
-            <p className="text-sm mt-2" style={{ color: "#A1A1AA" }}>
-              Estamos preparando novidades para você.<br />
+            <h1 className="text-2xl font-bold text-white">🔄 Estoque em renovação!</h1>
+            <p className="text-sm mt-2 leading-relaxed" style={{ color: "#A1A1AA" }}>
+              Estamos renovando o estoque com figurinhas novas.<br />
+              Temos bastante disponível — <span style={{ color: "#A78BFA", fontWeight: 600 }}>pos 13, FWC e seleções difíceis</span>.<br />
               Em breve o catálogo estará disponível novamente!
             </p>
           </div>
-          <div className="rounded-2xl px-4 py-3"
-            style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.2)" }}>
-            <p className="text-xs" style={{ color: "#A78BFA" }}>
-              ⭐ Figurinhas novas chegando em breve
-            </p>
+
+          {/* Destaques */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { emoji: "📸", label: "Posição 13" },
+              { emoji: "🏆", label: "FWC" },
+              { emoji: "🌍", label: "Seleções difíceis" },
+            ].map(({ emoji, label }) => (
+              <div key={label} className="rounded-xl py-2 px-1 text-center"
+                style={{ background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)" }}>
+                <div className="text-xl">{emoji}</div>
+                <div className="text-xs mt-1 font-medium" style={{ color: "#A78BFA" }}>{label}</div>
+              </div>
+            ))}
           </div>
+
+          {/* WhatsApp */}
           {seller?.whatsapp && (
             <a
-              href={`https://wa.me/55${seller.whatsapp.replace(/\D/g, "")}?text=Ol%C3%A1!%20Vi%20que%20o%20cat%C3%A1logo%20est%C3%A1%20em%20renova%C3%A7%C3%A3o.%20Quando%20volta%3F`}
+              href={`https://wa.me/55${seller.whatsapp.replace(/\D/g, "")}?text=Ol%C3%A1!%20Vi%20que%20o%20cat%C3%A1logo%20est%C3%A1%20em%20renova%C3%A7%C3%A3o.%20Quero%20figurinhas%20da%20pos%2013%2C%20FWC%20e%20sele%C3%A7%C3%B5es%20dif%C3%ADceis!`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white"
               style={{ background: "linear-gradient(135deg,#22C55E,#16A34A)" }}
             >
-              <span>💬</span> Avisar quando voltar
+              <span>💬</span> Quero figurinhas — fale comigo!
             </a>
           )}
         </div>
