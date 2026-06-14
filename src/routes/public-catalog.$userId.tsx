@@ -618,7 +618,7 @@ function PublicCatalog() {
   }
 
   // ── CATÁLOGO EM PAUSA ─────────────────────────────────────────────────────
-  const CATALOGO_PAUSADO = true; // mude para false para reabrir
+  const CATALOGO_PAUSADO = false; // mude para false para reabrir
 
   if (CATALOGO_PAUSADO) {
     return (
