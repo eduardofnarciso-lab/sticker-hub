@@ -278,9 +278,9 @@ function ExtrasCatalog() {
     const msg = [
       `Olá! Tenho interesse nesta figurinha EXTRA e quero negociar:`,
       ``,
-      `⭐ *${player}* — ${rar}`,
-      `🔖 Código: ${fmtCode(s.code)}`,
-      Number(s.price) > 0 ? `💰 Preço de tabela: ${brl(s.price)}` : ``,
+      `*${player}* - ${rar}`,
+      `Código: ${fmtCode(s.code)}`,
+      Number(s.price) > 0 ? `Preço de tabela: ${brl(s.price)}` : ``,
     ].filter(Boolean).join("\n");
     return `https://wa.me/${EXTRAS_PHONE}?text=${encodeURIComponent(msg)}`;
   };
@@ -315,23 +315,21 @@ function ExtrasCatalog() {
       clearAllTimers();
 
       const shortId = String(orderId).slice(0, 8).toUpperCase();
-      const lines = cart.map((c) => `• ${fmtCode(c.code)} — ${c.name.split(" — ")[0]} (${c.qty}x)`);
+      const lines = cart.map((c) => `- ${fmtCode(c.code)} - ${c.name.split(" — ")[0]} (${c.qty}x)`);
       const msg = [
-        `#pedido-extras ${cartCount} figurinhas`,
+        `*Pedido de Figurinhas EXTRAS - Copa 2026*`,
         ``,
-        `⭐ *Pedido de Figurinhas EXTRAS — Copa 2026*`,
+        `*Nome:* ${buyerName.trim()}`,
+        `*WhatsApp:* ${buyerPhone.trim()}`,
+        `*Cidade:* ${buyerCity.trim()}`,
         ``,
-        `👤 *Nome:* ${buyerName.trim()}`,
-        `📱 *WhatsApp:* ${buyerPhone.trim()}`,
-        `📍 *Cidade:* ${buyerCity.trim()}`,
-        ``,
-        `🧾 *Itens:*`,
+        `*Itens:*`,
         ...lines,
         ``,
-        `🔢 *Total:* ${cartCount} extra${cartCount !== 1 ? "s" : ""}`,
-        `💰 *Valor: ${brl(cartValue)}*`,
+        `*Total:* ${cartCount} extra${cartCount !== 1 ? "s" : ""}`,
+        `*Valor: ${brl(cartValue)}*`,
         ``,
-        `🔖 Pedido: #${shortId}`,
+        `Pedido: #${shortId}`,
       ].join("\n");
 
       setWaUrl(`https://wa.me/${EXTRAS_PHONE}?text=${encodeURIComponent(msg)}`);
