@@ -225,6 +225,7 @@ function PublicCatalog() {
         .eq("user_id", userId)
         .eq("status", "disponivel")
         .gt("quantity", 0)
+        .not("code", "like", "EX%") // extras saem para o catálogo dedicado /extras-catalog
         .order("code", { ascending: true });
       if (error) throw error;
       return data ?? [];

@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   ClipboardList,
   Megaphone,
+  Star,
 } from "lucide-react";
 import { type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ const nav = [
   { to: "/dashboard",     label: "Início",     icon: LayoutDashboard },
   { to: "/contagem",      label: "Figurinhas", icon: Sticker },
   { to: "/stock",         label: "Estoque",    icon: PackageSearch },
+  { to: "/estoque-extras", label: "Extras",    icon: Star },
   { to: "/sales",         label: "Vendas",     icon: Receipt },
   { to: "/stock-history", label: "Histórico",  icon: ClipboardList },
   { to: "/campanha",     label: "Campanha",   icon: Megaphone },

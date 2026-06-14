@@ -16,6 +16,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicCatalogUserIdRouteImport } from './routes/public-catalog.$userId'
+import { Route as ExtrasCatalogUserIdRouteImport } from './routes/extras-catalog.$userId'
+import { Route as AuthenticatedEstoqueExtrasRouteImport } from './routes/_authenticated/estoque-extras'
 import { Route as AuthenticatedStockRouteImport } from './routes/_authenticated/stock'
 import { Route as AuthenticatedStickersRouteImport } from './routes/_authenticated/stickers'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
@@ -60,6 +62,16 @@ const PublicCatalogUserIdRoute = PublicCatalogUserIdRouteImport.update({
   id: '/public-catalog/$userId',
   path: '/public-catalog/$userId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ExtrasCatalogUserIdRoute = ExtrasCatalogUserIdRouteImport.update({
+  id: '/extras-catalog/$userId',
+  path: '/extras-catalog/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedEstoqueExtrasRoute = AuthenticatedEstoqueExtrasRouteImport.update({
+  id: '/estoque-extras',
+  path: '/estoque-extras',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedStockRoute = AuthenticatedStockRouteImport.update({
   id: '/stock',
@@ -120,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/albums': typeof AuthenticatedAlbumsRoute
   '/contagem': typeof AuthenticatedContagemRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/estoque-extras': typeof AuthenticatedEstoqueExtrasRoute
   '/sales': typeof AuthenticatedSalesRoute
   '/scan': typeof AuthenticatedScanRoute
   '/stickers': typeof AuthenticatedStickersRoute
@@ -127,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/stock-history': typeof AuthenticatedStockHistoryRoute
   '/campanha': typeof AuthenticatedCampanhaRoute
   '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
+  '/extras-catalog/$userId': typeof ExtrasCatalogUserIdRoute
   '/figurinha/$numero': typeof FigurinhaNumeroRoute
   '/comprar/$figurinha': typeof ComprarFigurinhaRoute
 }
@@ -138,6 +152,7 @@ export interface FileRoutesByTo {
   '/albums': typeof AuthenticatedAlbumsRoute
   '/contagem': typeof AuthenticatedContagemRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/estoque-extras': typeof AuthenticatedEstoqueExtrasRoute
   '/sales': typeof AuthenticatedSalesRoute
   '/scan': typeof AuthenticatedScanRoute
   '/stickers': typeof AuthenticatedStickersRoute
@@ -145,6 +160,7 @@ export interface FileRoutesByTo {
   '/stock-history': typeof AuthenticatedStockHistoryRoute
   '/campanha': typeof AuthenticatedCampanhaRoute
   '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
+  '/extras-catalog/$userId': typeof ExtrasCatalogUserIdRoute
   '/figurinha/$numero': typeof FigurinhaNumeroRoute
   '/comprar/$figurinha': typeof ComprarFigurinhaRoute
 }
@@ -158,6 +174,7 @@ export interface FileRoutesById {
   '/_authenticated/albums': typeof AuthenticatedAlbumsRoute
   '/_authenticated/contagem': typeof AuthenticatedContagemRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/estoque-extras': typeof AuthenticatedEstoqueExtrasRoute
   '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
   '/_authenticated/stickers': typeof AuthenticatedStickersRoute
@@ -165,6 +182,7 @@ export interface FileRoutesById {
   '/_authenticated/stock-history': typeof AuthenticatedStockHistoryRoute
   '/_authenticated/campanha': typeof AuthenticatedCampanhaRoute
   '/public-catalog/$userId': typeof PublicCatalogUserIdRoute
+  '/extras-catalog/$userId': typeof ExtrasCatalogUserIdRoute
   '/figurinha/$numero': typeof FigurinhaNumeroRoute
   '/comprar/$figurinha': typeof ComprarFigurinhaRoute
 }
@@ -178,6 +196,7 @@ export interface FileRouteTypes {
     | '/albums'
     | '/contagem'
     | '/dashboard'
+    | '/estoque-extras'
     | '/sales'
     | '/scan'
     | '/stickers'
@@ -185,6 +204,7 @@ export interface FileRouteTypes {
     | '/stock-history'
     | '/campanha'
     | '/public-catalog/$userId'
+    | '/extras-catalog/$userId'
     | '/figurinha/$numero'
     | '/comprar/$figurinha'
   fileRoutesByTo: FileRoutesByTo
@@ -196,6 +216,7 @@ export interface FileRouteTypes {
     | '/albums'
     | '/contagem'
     | '/dashboard'
+    | '/estoque-extras'
     | '/sales'
     | '/scan'
     | '/stickers'
@@ -203,6 +224,7 @@ export interface FileRouteTypes {
     | '/stock-history'
     | '/campanha'
     | '/public-catalog/$userId'
+    | '/extras-catalog/$userId'
     | '/figurinha/$numero'
     | '/comprar/$figurinha'
   id:
@@ -215,6 +237,7 @@ export interface FileRouteTypes {
     | '/_authenticated/albums'
     | '/_authenticated/contagem'
     | '/_authenticated/dashboard'
+    | '/_authenticated/estoque-extras'
     | '/_authenticated/sales'
     | '/_authenticated/scan'
     | '/_authenticated/stickers'
@@ -222,6 +245,7 @@ export interface FileRouteTypes {
     | '/_authenticated/stock-history'
     | '/_authenticated/campanha'
     | '/public-catalog/$userId'
+    | '/extras-catalog/$userId'
     | '/figurinha/$numero'
     | '/comprar/$figurinha'
   fileRoutesById: FileRoutesById
@@ -232,6 +256,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PlanosRoute: typeof PlanosRoute
   PublicCatalogUserIdRoute: typeof PublicCatalogUserIdRoute
+  ExtrasCatalogUserIdRoute: typeof ExtrasCatalogUserIdRoute
   FigurinhaNumeroRoute: typeof FigurinhaNumeroRoute
   ComprarFigurinhaRoute: typeof ComprarFigurinhaRoute
 }
@@ -271,6 +296,13 @@ declare module '@tanstack/react-router' {
       path: '/public-catalog/$userId'
       fullPath: '/public-catalog/$userId'
       preLoaderRoute: typeof PublicCatalogUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/extras-catalog/$userId': {
+      id: '/extras-catalog/$userId'
+      path: '/extras-catalog/$userId'
+      fullPath: '/extras-catalog/$userId'
+      preLoaderRoute: typeof ExtrasCatalogUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/figurinha/$numero': {
@@ -322,6 +354,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/estoque-extras': {
+      id: '/_authenticated/estoque-extras'
+      path: '/estoque-extras'
+      fullPath: '/estoque-extras'
+      preLoaderRoute: typeof AuthenticatedEstoqueExtrasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/contagem': {
       id: '/_authenticated/contagem'
       path: '/contagem'
@@ -365,6 +404,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAlbumsRoute: typeof AuthenticatedAlbumsRoute
   AuthenticatedContagemRoute: typeof AuthenticatedContagemRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEstoqueExtrasRoute: typeof AuthenticatedEstoqueExtrasRoute
   AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
   AuthenticatedStickersRoute: typeof AuthenticatedStickersRoute
@@ -378,6 +418,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAlbumsRoute: AuthenticatedAlbumsRoute,
   AuthenticatedContagemRoute: AuthenticatedContagemRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEstoqueExtrasRoute: AuthenticatedEstoqueExtrasRoute,
   AuthenticatedSalesRoute: AuthenticatedSalesRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,
   AuthenticatedStickersRoute: AuthenticatedStickersRoute,
@@ -396,6 +437,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PlanosRoute: PlanosRoute,
   PublicCatalogUserIdRoute: PublicCatalogUserIdRoute,
+  ExtrasCatalogUserIdRoute: ExtrasCatalogUserIdRoute,
   FigurinhaNumeroRoute: FigurinhaNumeroRoute,
   ComprarFigurinhaRoute: ComprarFigurinhaRoute,
 }
