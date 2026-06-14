@@ -22,6 +22,14 @@ type DbExtra = {
   image_url: string | null;
 };
 
+// Miniatura: foto do banco; senão /public/<codigo>.png; senão ícone
+function ExtraThumb({ code, imageUrl, alt, color }: { code: string; imageUrl: string | null; alt: string; color: string }) {
+  const src = imageUrl ?? `/${code}.png`;
+  const [err, setErr] = useState(false);
+  if (err) return <Camera className="h-5 w-5" style={{ color: color + "99" }} />;
+  return <img src={src} alt={alt} className="h-full w-full object-cover" loading="lazy" onError={() => setErr(true)} />;
+}
+
 function EstoqueExtrasPage() {
   const qc = useQueryClient();
   const { user } = useAuth();
@@ -220,11 +228,7 @@ function EstoqueExtrasPage() {
                   className="h-14 w-14 rounded-lg shrink-0 overflow-hidden flex items-center justify-center"
                   style={{ background: "rgba(0,0,0,0.25)", border: `1px solid ${color}55` }}
                 >
-                  {full?.image_url ? (
-                    <img src={full.image_url} alt={player} className="h-full w-full object-cover" loading="lazy" />
-                  ) : (
-                    <Camera className="h-5 w-5" style={{ color: color + "99" }} />
-                  )}
+                  <ExtraThumb code={e.code} imageUrl={full?.image_url ?? null} alt={player} color={color} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-[10px] font-mono font-bold" style={{ color }}>{e.code}</div>

@@ -20,6 +20,12 @@ const ALBUM_ORDER = new Map<string, number>([
 // Número da figurinha dentro do time (ordena 1,2...10,11 em vez de 1,10,11...2)
 function stickerSortNum(code: string): number {
   if (code === "00") return 0;
+  // Extras EX<NN>-<R>: ordena por jogador e depois Lilás, Bronze, Prata, Ouro, Rosa
+  const ex = code.match(/^EX(\d+)-([A-Z])$/);
+  if (ex) {
+    const rank: Record<string, number> = { L: 0, B: 1, P: 2, O: 3, R: 4 };
+    return parseInt(ex[1], 10) * 10 + (rank[ex[2]] ?? 9);
+  }
   const m = code.match(/(\d+)$/);
   return m ? parseInt(m[1], 10) : 999;
 }
@@ -225,7 +231,6 @@ function PublicCatalog() {
         .eq("user_id", userId)
         .eq("status", "disponivel")
         .gt("quantity", 0)
-        .not("code", "like", "EX%") // extras saem para o catálogo dedicado /extras-catalog
         .order("code", { ascending: true });
       if (error) throw error;
       return data ?? [];

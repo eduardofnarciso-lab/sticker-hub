@@ -14,7 +14,7 @@ export const Route = createFileRoute("/extras-catalog/$userId")({
   head: () => ({
     meta: [
       { title: "Figurinhas Extras Copa 2026 — Catálogo" },
-      { name: "description", content: "Figurinhas especiais (Ouro, Prata, Bronze, Lilás e Rosa) da Copa 2026." },
+      { name: "description", content: "Figurinhas especiais (Lilás, Bronze, Prata e Ouro) da Copa 2026." },
     ],
   }),
 });
@@ -75,7 +75,15 @@ function extraSortNum(code: string): number {
   const m = code.match(/EX(\d+)/);
   return m ? parseInt(m[1], 10) : 999;
 }
-const RARITY_ORDER: Record<string, number> = { O: 0, P: 1, B: 2, L: 3, R: 4 };
+const RARITY_ORDER: Record<string, number> = { L: 0, B: 1, P: 2, O: 3, R: 4 };
+
+// Foto da extra: usa a do banco; senão tenta /public/<codigo>.png; senão placeholder
+function ExtraPhoto({ code, imageUrl, alt, color }: { code: string | null; imageUrl: string | null; alt: string; color: string }) {
+  const src = imageUrl ?? (code ? `/${code}.png` : null);
+  const [err, setErr] = useState(false);
+  if (!src || err) return <Camera className="h-8 w-8" style={{ color: color + "88" }} />;
+  return <img src={src} alt={alt} className="h-full w-full object-contain" loading="lazy" onError={() => setErr(true)} />;
+}
 
 // ─── Componente ──────────────────────────────────────────────────────────────
 function ExtrasCatalog() {
@@ -388,13 +396,9 @@ function ExtrasCatalog() {
                 <div key={s.id} className="rounded-2xl overflow-hidden flex flex-col"
                   style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${color}55` }}>
                   {/* Foto */}
-                  <div className="relative aspect-square flex items-center justify-center"
+                  <div className="relative aspect-[3/4] flex items-center justify-center"
                     style={{ background: `linear-gradient(135deg, ${color}22, rgba(0,0,0,0.3))` }}>
-                    {s.image_url ? (
-                      <img src={s.image_url} alt={player} className="h-full w-full object-cover" loading="lazy" />
-                    ) : (
-                      <Camera className="h-8 w-8" style={{ color: color + "88" }} />
-                    )}
+                    <ExtraPhoto code={s.code} imageUrl={s.image_url} alt={player} color={color} />
                     <span className="absolute top-1.5 left-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md"
                       style={{ background: color, color: "#0B1020" }}>{rar}</span>
                   </div>

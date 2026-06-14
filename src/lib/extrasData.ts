@@ -12,7 +12,6 @@ export const rarityColor: Record<string, string> = {
   B: "#CD7F32", // Bronze
   P: "#C0C0C0", // Prata
   O: "#FFD700", // Ouro
-  R: "#F472B6", // Rosa
 };
 
 export const rarityLabel: Record<string, string> = {
@@ -20,7 +19,6 @@ export const rarityLabel: Record<string, string> = {
   B: "Bronze",
   P: "Prata",
   O: "Ouro",
-  R: "Rosa",
 };
 
 export const getRarityKey = (code: string | null | undefined): string =>
@@ -46,7 +44,6 @@ export const EXTRAS: ExtraTemplate[] = [
   { code: "EX03-B", name: "Lamine Yamal (Espanha) — Bronze" },
   { code: "EX03-P", name: "Lamine Yamal (Espanha) — Prata" },
   { code: "EX03-O", name: "Lamine Yamal (Espanha) — Ouro" },
-  { code: "EX03-R", name: "Lamine Yamal (Espanha) — Rosa" },
   { code: "EX04-L", name: "Cristiano Ronaldo (Portugal) — Lilás" },
   { code: "EX04-B", name: "Cristiano Ronaldo (Portugal) — Bronze" },
   { code: "EX04-P", name: "Cristiano Ronaldo (Portugal) — Prata" },
@@ -71,7 +68,6 @@ export const EXTRAS: ExtraTemplate[] = [
   { code: "EX09-B", name: "Lionel Messi (Argentina) — Bronze" },
   { code: "EX09-P", name: "Lionel Messi (Argentina) — Prata" },
   { code: "EX09-O", name: "Lionel Messi (Argentina) — Ouro" },
-  { code: "EX09-R", name: "Lionel Messi (Argentina) — Rosa" },
   { code: "EX10-L", name: "Achraf Hakimi (Marrocos) — Lilás" },
   { code: "EX10-B", name: "Achraf Hakimi (Marrocos) — Bronze" },
   { code: "EX10-P", name: "Achraf Hakimi (Marrocos) — Prata" },
@@ -112,7 +108,6 @@ export const EXTRAS: ExtraTemplate[] = [
   { code: "EX19-B", name: "Federico Valverde (Uruguai) — Bronze" },
   { code: "EX19-P", name: "Federico Valverde (Uruguai) — Prata" },
   { code: "EX19-O", name: "Federico Valverde (Uruguai) — Ouro" },
-  { code: "EX19-R", name: "Federico Valverde (Uruguai) — Rosa" },
   { code: "EX20-L", name: "Jérémy Doku (Bélgica) — Lilás" },
   { code: "EX20-B", name: "Jérémy Doku (Bélgica) — Bronze" },
   { code: "EX20-P", name: "Jérémy Doku (Bélgica) — Prata" },
