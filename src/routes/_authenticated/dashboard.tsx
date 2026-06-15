@@ -75,29 +75,34 @@ function Dashboard() {
         .filter((o) => ["aprovado", "separado", "entregue"].includes(o.status))
         .map((o) => o.id);
 
-      let copaVendido  = 0;
+      // Total vendido (base segura via orders.total_value)
+      const totalVendido = ordersData
+        .filter((o) => ["aprovado", "separado", "entregue"].includes(o.status))
+        .reduce((acc, o) => acc + Number(o.total_value), 0);
+
+      // Por padrão, tudo é Copa; tenta separar via order_items
+      let copaVendido   = totalVendido;
       let extrasVendido = 0;
 
       if (approvedIds.length > 0) {
-        const { data: items } = await (supabase as any)
+        const { data: items, error: itemsErr } = await (supabase as any)
           .from("order_items")
           .select("sticker_code, quantity, unit_price")
           .in("order_id", approvedIds);
 
-        for (const item of items ?? []) {
-          const val = Number(item.unit_price) * Number(item.quantity);
-          if (item.sticker_code?.startsWith("EX")) {
-            extrasVendido += val;
-          } else {
-            copaVendido += val;
+        if (!itemsErr && items && items.length > 0) {
+          let extraCalc = 0;
+          let copaCalc  = 0;
+          for (const item of items) {
+            const val = Number(item.unit_price) * Number(item.quantity);
+            if (item.sticker_code?.startsWith("EX")) extraCalc += val;
+            else copaCalc += val;
           }
-        }
-
-        // Fallback: se order_items vazio, usa total_value das orders
-        if ((items ?? []).length === 0) {
-          copaVendido = ordersData
-            .filter((o) => ["aprovado", "separado", "entregue"].includes(o.status))
-            .reduce((acc, o) => acc + Number(o.total_value), 0);
+          extrasVendido = extraCalc;
+          // Se order_items não cobre pedidos antigos, usa total como base
+          copaVendido = (copaCalc + extraCalc) < totalVendido * 0.9
+            ? totalVendido - extraCalc
+            : copaCalc;
         }
       }
 
@@ -162,7 +167,7 @@ function Dashboard() {
       {/* ── Figurinhas Copa ── */}
       <div>
         <h2 className="text-xs font-semibold mb-3 uppercase tracking-widest" style={{ color: "#71717A" }}>Figurinhas Copa 2026</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {CARDS_COPA.map((c) => {
             const Icon = c.icon;
             return (
