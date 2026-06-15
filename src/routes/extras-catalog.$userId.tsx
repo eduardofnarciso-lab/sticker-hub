@@ -100,6 +100,8 @@ function ExtrasCatalog() {
   const [sending, setSending] = useState(false);
   const [waUrl, setWaUrl] = useState<string | null>(null);
 
+  type StickerRow = { id: string; code: string | null; name: string; price: number };
+
   // Modal de inatividade
   const [inactiveModal, setInactiveModal] = useState(false);
   const [confirmSecs, setConfirmSecs] = useState(0);
@@ -271,8 +273,8 @@ function ExtrasCatalog() {
     qc.invalidateQueries({ queryKey: ["cart-reservations"] });
   };
 
-  // ── Negociar (WhatsApp direto na figurinha) ──────────────────────────────────
-  const negotiateUrl = (s: { code: string | null; name: string; price: number }) => {
+  // ── Negociar ──────────────────────────────────────────────────────────────────
+  const negotiateUrl = (s: StickerRow) => {
     const player = s.name.split(" — ")[0];
     const rar = rarityLabel[getRarityKey(s.code)] ?? s.name.split(" — ")[1] ?? "";
     const msg = [
@@ -282,7 +284,27 @@ function ExtrasCatalog() {
       `Código: ${fmtCode(s.code)}`,
       Number(s.price) > 0 ? `Preço de tabela: ${brl(s.price)}` : ``,
     ].filter(Boolean).join("\n");
-    return `https://wa.me/${EXTRAS_PHONE}?text=${encodeURIComponent(msg)}`;
+    return `https://wa.me/${EXTRAS_PHONE.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`;
+  };
+
+  const handleNegotiate = async (s: StickerRow) => {
+    // Cria pedido pendente no banco (silencioso — não bloqueia o WhatsApp)
+    (supabase as any).rpc("place_order", {
+      p_seller_id:      userId,
+      p_buyer_name:     "Negociação",
+      p_buyer_whatsapp: "0",
+      p_total_value:    Number(s.price) || 0,
+      p_items: [{
+        sticker_id:   s.id,
+        sticker_code: s.code ?? "",
+        sticker_name: s.name,
+        quantity:     1,
+        unit_price:   Number(s.price) || 0,
+      }],
+    }).catch(() => {}); // falha silenciosa
+
+    // Abre WhatsApp imediatamente
+    window.open(negotiateUrl(s), "_blank");
   };
 
   // ── Envio do pedido (+Quero → checkout) ──────────────────────────────────────
@@ -420,11 +442,11 @@ function ExtrasCatalog() {
                         style={{ background: "rgba(167,139,250,0.18)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)" }}>
                         <Plus className="h-3 w-3" /> Quero
                       </button>
-                      <a href={negotiateUrl(s)} target="_blank" rel="noopener noreferrer"
+                      <button onClick={() => handleNegotiate(s)}
                         className="flex items-center justify-center gap-1 py-1.5 rounded-lg text-[11px] font-bold transition-all"
                         style={{ background: "rgba(37,211,102,0.15)", color: "#25D366", border: "1px solid rgba(37,211,102,0.3)" }}>
                         <MessageCircle className="h-3 w-3" /> Negociar
-                      </a>
+                      </button>
                     </div>
                   </div>
                 </div>
