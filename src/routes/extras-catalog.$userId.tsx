@@ -287,11 +287,7 @@ function ExtrasCatalog() {
     return `https://wa.me/${EXTRAS_PHONE.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`;
   };
 
-  const handleNegotiate = (s: StickerRow) => {
-    // Abre WhatsApp PRIMEIRO (síncrono — evita bloqueio de popup do browser)
-    window.open(negotiateUrl(s), "_blank");
-
-    // Cria pedido pendente em background (fire-and-forget)
+  const registerNegotiate = (s: StickerRow) => {
     (supabase as any).rpc("place_order", {
       p_seller_id:      userId,
       p_buyer_name:     "Negociação",
@@ -442,11 +438,16 @@ function ExtrasCatalog() {
                         style={{ background: "rgba(167,139,250,0.18)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)" }}>
                         <Plus className="h-3 w-3" /> Quero
                       </button>
-                      <button onClick={() => handleNegotiate(s)}
+                      <a
+                        href={negotiateUrl(s)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => registerNegotiate(s)}
                         className="flex items-center justify-center gap-1 py-1.5 rounded-lg text-[11px] font-bold transition-all"
-                        style={{ background: "rgba(37,211,102,0.15)", color: "#25D366", border: "1px solid rgba(37,211,102,0.3)" }}>
+                        style={{ background: "rgba(37,211,102,0.15)", color: "#25D366", border: "1px solid rgba(37,211,102,0.3)" }}
+                      >
                         <MessageCircle className="h-3 w-3" /> Negociar
-                      </button>
+                      </a>
                     </div>
                   </div>
                 </div>
