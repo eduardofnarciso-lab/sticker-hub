@@ -31,6 +31,7 @@ type CartItem = {
   price: number;
   qty: number;
   maxQty: number;
+  negotiate?: boolean;
 };
 
 // ─── Helpers de reserva (iguais ao catálogo principal) ───────────────────────
@@ -99,8 +100,6 @@ function ExtrasCatalog() {
   const [buyerCity, setBuyerCity] = useState("");
   const [sending, setSending] = useState(false);
   const [waUrl, setWaUrl] = useState<string | null>(null);
-
-  type StickerRow = { id: string; code: string | null; name: string; price: number };
 
   // Modal de inatividade
   const [inactiveModal, setInactiveModal] = useState(false);
@@ -237,7 +236,7 @@ function ExtrasCatalog() {
   }, [stickers, search]);
 
   // ── Carrinho ───────────────────────────────────────────────────────────────────
-  const addToCart = async (s: (typeof stickers)[number]) => {
+  const addToCart = async (s: (typeof stickers)[number], negotiate = false) => {
     const avail = availableQty(s);
     const existing = cart.find((c) => c.id === s.id);
     if (existing) {
@@ -249,12 +248,12 @@ function ExtrasCatalog() {
       if (avail <= 0) { toast.warning("Extra indisponível no momento"); return; }
       setCart((prev) => [
         ...prev,
-        { id: s.id, code: s.code ?? "", name: s.name, price: Number(s.price) || 0, qty: 1, maxQty: avail },
+        { id: s.id, code: s.code ?? "", name: s.name, price: Number(s.price) || 0, qty: 1, maxQty: avail, negotiate },
       ]);
       await dbReserve(sessionId, s.id, 1);
     }
     qc.invalidateQueries({ queryKey: ["cart-reservations"] });
-    toast.success(`${fmtCode(s.code)} adicionada!`);
+    toast.success(negotiate ? `${fmtCode(s.code)} adicionada para negociar!` : `${fmtCode(s.code)} adicionada!`);
   };
 
   const changeQty = async (id: string, delta: number) => {
@@ -273,35 +272,6 @@ function ExtrasCatalog() {
     qc.invalidateQueries({ queryKey: ["cart-reservations"] });
   };
 
-  // ── Negociar ──────────────────────────────────────────────────────────────────
-  const negotiateUrl = (s: StickerRow) => {
-    const player = s.name.split(" — ")[0];
-    const rar = rarityLabel[getRarityKey(s.code)] ?? s.name.split(" — ")[1] ?? "";
-    const msg = [
-      `Olá! Tenho interesse nesta figurinha EXTRA e quero negociar:`,
-      ``,
-      `*${player}* - ${rar}`,
-      `Código: ${fmtCode(s.code)}`,
-      Number(s.price) > 0 ? `Preço de tabela: ${brl(s.price)}` : ``,
-    ].filter(Boolean).join("\n");
-    return `https://wa.me/${EXTRAS_PHONE.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`;
-  };
-
-  const registerNegotiate = (s: StickerRow) => {
-    (supabase as any).rpc("place_order", {
-      p_seller_id:      userId,
-      p_buyer_name:     "Negociação",
-      p_buyer_whatsapp: "0",
-      p_total_value:    Number(s.price) || 0,
-      p_items: [{
-        sticker_id:   s.id,
-        sticker_code: s.code ?? "",
-        sticker_name: s.name,
-        quantity:     1,
-        unit_price:   Number(s.price) || 0,
-      }],
-    }).catch(() => {});
-  };
 
   // ── Envio do pedido (+Quero → checkout) ──────────────────────────────────────
   const sendOrder = async () => {
@@ -333,9 +303,14 @@ function ExtrasCatalog() {
       clearAllTimers();
 
       const shortId = String(orderId).slice(0, 8).toUpperCase();
-      const lines = cart.map((c) => `- ${fmtCode(c.code)} - ${c.name.split(" — ")[0]} (${c.qty}x)`);
+      const hasNegotiate = cart.some((c) => c.negotiate);
+      const lines = cart.map((c) =>
+        `- ${fmtCode(c.code)} - ${c.name.split(" — ")[0]} (${c.negotiate ? "quero negociar" : `${c.qty}x`})`
+      );
       const msg = [
-        `*Pedido de Figurinhas EXTRAS - Copa 2026*`,
+        hasNegotiate
+          ? `*Interesse em Negociar - Figurinhas EXTRAS*`
+          : `*Pedido de Figurinhas EXTRAS - Copa 2026*`,
         ``,
         `*Nome:* ${buyerName.trim()}`,
         `*WhatsApp:* ${buyerPhone.trim()}`,
@@ -345,7 +320,7 @@ function ExtrasCatalog() {
         ...lines,
         ``,
         `*Total:* ${cartCount} extra${cartCount !== 1 ? "s" : ""}`,
-        `*Valor: ${brl(cartValue)}*`,
+        Number(cartValue) > 0 ? `*Valor de tabela: ${brl(cartValue)}*` : `*Valor: a combinar*`,
         ``,
         `Pedido: #${shortId}`,
       ].join("\n");
@@ -438,16 +413,11 @@ function ExtrasCatalog() {
                         style={{ background: "rgba(167,139,250,0.18)", color: "#A78BFA", border: "1px solid rgba(167,139,250,0.3)" }}>
                         <Plus className="h-3 w-3" /> Quero
                       </button>
-                      <a
-                        href={negotiateUrl(s)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => registerNegotiate(s)}
-                        className="flex items-center justify-center gap-1 py-1.5 rounded-lg text-[11px] font-bold transition-all"
-                        style={{ background: "rgba(37,211,102,0.15)", color: "#25D366", border: "1px solid rgba(37,211,102,0.3)" }}
-                      >
+                      <button onClick={() => addToCart(s, true)} disabled={avail <= 0}
+                        className="flex items-center justify-center gap-1 py-1.5 rounded-lg text-[11px] font-bold transition-all disabled:opacity-40"
+                        style={{ background: "rgba(37,211,102,0.15)", color: "#25D366", border: "1px solid rgba(37,211,102,0.3)" }}>
                         <MessageCircle className="h-3 w-3" /> Negociar
-                      </a>
+                      </button>
                     </div>
                   </div>
                 </div>
