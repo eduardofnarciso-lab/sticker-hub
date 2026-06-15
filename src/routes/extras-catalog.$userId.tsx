@@ -287,8 +287,11 @@ function ExtrasCatalog() {
     return `https://wa.me/${EXTRAS_PHONE.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`;
   };
 
-  const handleNegotiate = async (s: StickerRow) => {
-    // Cria pedido pendente no banco (silencioso — não bloqueia o WhatsApp)
+  const handleNegotiate = (s: StickerRow) => {
+    // Abre WhatsApp PRIMEIRO (síncrono — evita bloqueio de popup do browser)
+    window.open(negotiateUrl(s), "_blank");
+
+    // Cria pedido pendente em background (fire-and-forget)
     (supabase as any).rpc("place_order", {
       p_seller_id:      userId,
       p_buyer_name:     "Negociação",
@@ -301,10 +304,7 @@ function ExtrasCatalog() {
         quantity:     1,
         unit_price:   Number(s.price) || 0,
       }],
-    }).catch(() => {}); // falha silenciosa
-
-    // Abre WhatsApp imediatamente
-    window.open(negotiateUrl(s), "_blank");
+    }).catch(() => {});
   };
 
   // ── Envio do pedido (+Quero → checkout) ──────────────────────────────────────
